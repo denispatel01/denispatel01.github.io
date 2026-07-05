@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attendance Analytics · Case Study · Denis Patel</title>
+  <meta name="description" content="An end-to-end student attendance reporting module — dynamic HTML reports, scheduled daily email delivery, and whole-school / grade-wise / trend analytics." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👨‍💻</text></svg>" />
+</head>
+<body data-base="../" data-page="projects" data-progress="on">
+
+  <section class="page-head">
+    <div class="container">
+      <p class="crumbs"><a href="../projects.html">← Projects</a> / Attendance Analytics</p>
+      <p class="eyebrow">Reporting · Analytics</p>
+      <h1>Student Attendance Analytics</h1>
+      <p>An end-to-end reporting module recognized by stakeholders for its technical quality and usability.</p>
+    </div>
+  </section>
+
+  <div class="container">
+    <article class="doc">
+      <div class="meta-row">
+        <span class="badge">ASP.NET</span>
+        <span class="badge">SQL Server</span>
+        <span class="badge">Scheduled jobs</span>
+        <span class="badge">HTML email</span>
+      </div>
+
+      <p class="lead-p">
+        School leadership needed attendance insight without logging in and running reports
+        by hand. I built the Student Attendance Summary module end-to-end — part of the
+        HRIS schedule — turning raw attendance data into a report that lands in inboxes
+        every day.
+      </p>
+
+      <h2>What it does</h2>
+      <ul>
+        <li><strong>Dynamic HTML report</strong> generated from attendance data, styled to be readable in any email client.</li>
+        <li><strong>Scheduled daily email delivery</strong> to stakeholders — no manual step.</li>
+        <li><strong>Whole-school, grade-wise, and trend analytics</strong> so leaders can spot patterns, not just single-day numbers.</li>
+      </ul>
+
+      <div class="callout">
+        <h4>Why the design worked</h4>
+        <p>Reports are only useful if people actually read them. Delivering a clean, pre-computed summary by email — instead of expecting busy staff to pull it themselves — is what drove adoption. It was recognized internally for both its technical quality and its usability.</p>
+      </div>
+
+      <h2>The technical shape</h2>
+      <p>
+        The heavy lifting happens in SQL — aggregating attendance across the school and by
+        grade, computing trends over time. A scheduled job renders the HTML and dispatches
+        the email each morning. Because the aggregation is done server-side and cached into
+        the report, recipients get a fast, static artifact rather than a slow live query.
+      </p>
+
+      <div class="doc-nav">
+        <a class="read" href="nvizion.html">← nVizion</a>
+        <a class="read" href="integrations.html">Next: Integrations →</a>
+      </div>
+    </article>
+  </div>
+
+  <script src="../components.js"></script>
+</body>
+</html>

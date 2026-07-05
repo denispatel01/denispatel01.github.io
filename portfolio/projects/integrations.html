@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Integrations — ERPNext, WhatsApp, OAuth, S3 · Denis Patel</title>
+  <meta name="description" content="Third-party integrations built for the Nucleus platform — ERPNext CRM lead sync, WhatsApp notifications, Google OAuth, and AWS S3 storage." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👨‍💻</text></svg>" />
+</head>
+<body data-base="../" data-page="projects" data-progress="on">
+
+  <section class="page-head">
+    <div class="container">
+      <p class="crumbs"><a href="../projects.html">← Projects</a> / Integrations</p>
+      <p class="eyebrow">Integrations · Automation</p>
+      <h1>Integrations that removed manual work</h1>
+      <p>Connecting the platform to the outside world — CRM, messaging, identity, and storage.</p>
+    </div>
+  </section>
+
+  <div class="container">
+    <article class="doc">
+      <div class="meta-row">
+        <span class="badge">REST</span>
+        <span class="badge">Webhooks</span>
+        <span class="badge">WhatsApp API</span>
+        <span class="badge">Google OAuth</span>
+        <span class="badge">AWS S3</span>
+      </div>
+
+      <p class="lead-p">
+        A platform is only as useful as the systems it talks to. Across Nucleus I built a
+        set of integrations that each removed a recurring manual chore.
+      </p>
+
+      <h2>ERPNext Lead Sync</h2>
+      <p>
+        Admissions inquiries used to be re-keyed between the ERP and the ERPNext CRM. I built
+        a synchronization integration that automates the hand-off — <strong>eliminating duplicate
+        manual data entry</strong> and keeping both systems consistent.
+      </p>
+
+      <h2>WhatsApp Transport notifications</h2>
+      <p>
+        For the Transport module, I integrated the WhatsApp Business API (via Interekt) to send
+        route notifications to parents — timely updates delivered on the channel families
+        actually check.
+      </p>
+
+      <h2>Google OAuth login</h2>
+      <p>
+        Added Google OAuth so users sign in with their existing school Google account — fewer
+        passwords to manage and a smoother login for 2,200+ users.
+      </p>
+
+      <h2>AWS S3 document storage &amp; fee reconciliation</h2>
+      <ul>
+        <li><strong>AWS S3</strong> for document storage — offloading files from the app servers to durable object storage.</li>
+        <li><strong>Bank-statement CSV import</strong> for the Fees module, automating fee reconciliation against real bank data.</li>
+      </ul>
+
+      <div class="callout">
+        <h4>The common thread</h4>
+        <p>Each integration was wrapped behind a clean internal interface with proper auth and error handling, so the rest of the app stayed simple and the integrations could be tested and swapped independently.</p>
+      </div>
+
+      <div class="doc-nav">
+        <a class="read" href="tialupe.html">← TiaLupe</a>
+        <a class="read" href="../projects.html">All projects →</a>
+      </div>
+    </article>
+  </div>
+
+  <script src="../components.js"></script>
+</body>
+</html>

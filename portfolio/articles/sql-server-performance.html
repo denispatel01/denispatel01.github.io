@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Making Slow SQL Server Screens Fast · Denis Patel</title>
+  <meta name="description" content="A practical playbook for SQL Server performance: profiling, indexing, rewriting stored procedures, and server-side pagination." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👨‍💻</text></svg>" />
+</head>
+<body data-base="../" data-page="articles" data-progress="on">
+
+  <section class="page-head">
+    <div class="container">
+      <p class="crumbs"><a href="../articles.html">← Articles</a> / SQL Performance</p>
+      <p class="eyebrow">Performance</p>
+      <h1>Making Slow SQL Server Screens Fast</h1>
+    </div>
+  </section>
+
+  <div class="container">
+    <article class="doc">
+      <p class="lead-p">
+        When a platform grows past a couple thousand users, the screens that felt instant on
+        day one start to crawl. Almost always, the fix isn't a bigger server — it's better
+        data access. This is the playbook I used to keep a 2,000+ user platform responsive.
+      </p>
+
+      <h2>1. Measure before you touch anything</h2>
+      <p>
+        Guessing at performance wastes time. I start with <strong>SQL Profiler</strong> (or Extended
+        Events) to capture the actual slow queries and their duration, reads, and frequency.
+        The worst offender is usually a query that's both slow <em>and</em> called constantly.
+        Then I read the <strong>actual execution plan</strong> to see where time goes.
+      </p>
+
+      <blockquote>Optimize the query that costs the most × runs the most — not the one that looks ugliest.</blockquote>
+
+      <h2>2. Index to match real query patterns</h2>
+      <p>
+        The classic symptom is a <strong>table scan</strong> where you expected a seek. Indexes should
+        match how the data is actually filtered and sorted. A covering index that includes
+        the columns a query selects can eliminate expensive key lookups entirely.
+      </p>
+      <pre><code>-- Filtered + sorted by these columns on a hot query? Index them.
+CREATE NONCLUSTERED INDEX IX_Attendance_Student_Date
+  ON Attendance (StudentId, [Date])
+  INCLUDE (Status);   -- covering: no key lookup needed</code></pre>
+      <div class="callout">
+        <h4>Caveat</h4>
+        <p>Indexes speed reads but slow writes and use space. Add them deliberately, based on measured query patterns — not one per column "just in case".</p>
+      </div>
+
+      <h2>3. Rewrite the stored procedures that hurt</h2>
+      <p>Common wins when rewriting SPs:</p>
+      <ul>
+        <li>Replace <strong>correlated subqueries</strong> and row-by-row logic with set-based joins.</li>
+        <li>Eliminate redundant scans of the same table.</li>
+        <li>Avoid functions on indexed columns in <code>WHERE</code> clauses (they defeat the index).</li>
+        <li>Watch for <strong>parameter sniffing</strong> on procs that behave well for one input and badly for another.</li>
+      </ul>
+
+      <h2>4. Never fetch what you won't show: server-side pagination</h2>
+      <p>
+        The single biggest win on list-heavy screens. Instead of pulling thousands of rows
+        to the app and paging in memory, fetch exactly one page from the database:
+      </p>
+      <pre><code>SELECT StudentId, Name, GradeName
+FROM   Students
+WHERE  CampusId = @CampusId
+ORDER  BY Name
+OFFSET     @PageSize * (@PageNumber - 1) ROWS
+FETCH NEXT @PageSize ROWS ONLY;</code></pre>
+      <p>
+        Combined with a matching index on the <code>ORDER BY</code> column, this keeps a grid
+        fast whether the table has 1,000 rows or 1,000,000.
+      </p>
+
+      <h2>The results</h2>
+      <p>
+        On <a class="inline" href="../projects/nucleus-edu.html">Nucleus EDU</a>, applying exactly these
+        steps — profile, index, rewrite SPs, paginate — kept the high-volume modules
+        responsive as daily usage scaled past 2,000 users, with no infrastructure upgrade.
+      </p>
+
+      <div class="doc-nav">
+        <a class="read" href="jwt-authentication.html">← JWT Authentication</a>
+        <a class="read" href="../articles.html">All articles →</a>
+      </div>
+    </article>
+  </div>
+
+  <script src="../components.js"></script>
+</body>
+</html>

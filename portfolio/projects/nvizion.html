@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>nVizion — US Bank Loan Processing · Case Study · Denis Patel</title>
+  <meta name="description" content="Building an end-to-end US bank loan-processing platform with borrower KYC & credit checks via Experian, Equifax, IDology and FlashSpread." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👨‍💻</text></svg>" />
+</head>
+<body data-base="../" data-page="projects" data-progress="on">
+
+  <section class="page-head">
+    <div class="container">
+      <p class="crumbs"><a href="../projects.html">← Projects</a> / nVizion</p>
+      <p class="eyebrow">Fintech · US Banking · 2021–2022</p>
+      <h1>nVizion — US Bank Loan Processing Platform</h1>
+      <p>An end-to-end loan-processing workflow for a US banking client, with borrower identity verification and credit assessment.</p>
+    </div>
+  </section>
+
+  <div class="container">
+    <article class="doc">
+      <div class="meta-row">
+        <span class="badge">ASP.NET Core</span>
+        <span class="badge">SQL Server</span>
+        <span class="badge">Experian / Equifax</span>
+        <span class="badge">IDology</span>
+        <span class="badge">FlashSpread</span>
+        <span class="badge">Payment gateways</span>
+      </div>
+
+      <p class="lead-p">
+        A US banking client needed loan officers to manage the entire loan lifecycle —
+        from application to approval — through a single web interface, with the compliance-
+        grade identity and credit checks that US lending requires.
+      </p>
+
+      <h2>What I delivered</h2>
+      <ul>
+        <li>The <strong>end-to-end loan-processing workflow</strong>, letting loan officers move an application from intake to approval in one interface.</li>
+        <li><strong>Secure document upload</strong>, automated status tracking, and role-based dashboards — cutting manual data-entry touchpoints for loan officers.</li>
+        <li>On the DueDiligence borrower-verification flow, integrated <strong>Experian, Equifax, IDology, and FlashSpread</strong> for US borrower KYC and credit assessment — including API-key and token-based authentication for each provider.</li>
+        <li>Debugged and maintained existing <strong>payment-gateway integrations</strong> (Payze, HDFC, Paytm), resolving production payment-flow issues across environments.</li>
+      </ul>
+
+      <div class="callout">
+        <h4>Integration challenge</h4>
+        <p>Each verification provider had its own auth scheme, request/response shape, and failure modes. I wrapped them behind a consistent internal contract so the loan workflow didn't care <em>which</em> bureau answered — making the flow easier to test and to extend with new providers.</p>
+      </div>
+
+      <h2>Working across time zones</h2>
+      <p>
+        This was a remote engagement for a Maryland, USA client through a Microsoft Silver
+        Partner. I collaborated asynchronously across US–India time zones within Agile
+        sprints, consistently meeting delivery milestones — a working style I've kept
+        sharp and one that suits freelance clients well.
+      </p>
+
+      <h2>Why it mattered</h2>
+      <p>
+        Lending platforms live and die on trust and compliance. Getting KYC and credit
+        integration right — with proper auth, error handling, and auditability — is what
+        let loan officers rely on the system for real approval decisions.
+      </p>
+
+      <div class="doc-nav">
+        <a class="read" href="nucleus-edu.html">← Nucleus EDU</a>
+        <a class="read" href="tialupe.html">Next: TiaLupe (Healthcare) →</a>
+      </div>
+    </article>
+  </div>
+
+  <script src="../components.js"></script>
+</body>
+</html>

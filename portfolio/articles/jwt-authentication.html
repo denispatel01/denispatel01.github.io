@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JWT Authentication & Role-Based Authorization · Denis Patel</title>
+  <meta name="description" content="How JWT works, how to secure an ASP.NET Core API with JWT bearer auth and role-based authorization, and the common mistakes to avoid." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👨‍💻</text></svg>" />
+</head>
+<body data-base="../" data-page="articles" data-progress="on">
+
+  <section class="page-head">
+    <div class="container">
+      <p class="crumbs"><a href="../articles.html">← Articles</a> / JWT Authentication</p>
+      <p class="eyebrow">Security</p>
+      <h1>JWT Authentication &amp; Role-Based Authorization</h1>
+    </div>
+  </section>
+
+  <div class="container">
+    <article class="doc">
+      <p class="lead-p">
+        JWT (JSON Web Token) is the standard way to secure a stateless REST API. The idea is
+        simple, but the details are where security lives. Here's the model I use to secure
+        ASP.NET Core APIs — and the mistakes that quietly break it.
+      </p>
+
+      <h2>What a JWT actually is</h2>
+      <p>A JWT is three base64url parts separated by dots: <code>header.payload.signature</code>.</p>
+      <ul>
+        <li><strong>Header</strong> — the signing algorithm (e.g. HS256 or RS256).</li>
+        <li><strong>Payload</strong> — the <em>claims</em>: who the user is, their roles, expiry (<code>exp</code>), and so on. This is <strong>not encrypted</strong> — anyone can read it. Never put secrets here.</li>
+        <li><strong>Signature</strong> — a cryptographic signature over the header and payload. This is what makes the token tamper-proof: change one byte of the payload and the signature no longer validates.</li>
+      </ul>
+
+      <div class="callout">
+        <h4>Key mental model</h4>
+        <p>A JWT is not secret — it's <em>trusted</em>. The server doesn't store sessions; it re-verifies the signature on every request. Valid signature + not expired = the claims can be trusted.</p>
+      </div>
+
+      <h2>The flow</h2>
+      <ol>
+        <li>User logs in with credentials.</li>
+        <li>Server verifies them and issues a signed JWT containing the user's id and roles.</li>
+        <li>Client sends the token on every request: <code>Authorization: Bearer &lt;token&gt;</code>.</li>
+        <li>Server validates the signature and expiry, then authorizes based on the claims.</li>
+      </ol>
+
+      <h2>Securing an ASP.NET Core API</h2>
+      <pre><code>// Program.cs — register JWT bearer authentication
+builder.Services
+  .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+  .AddJwtBearer(options =>
+  {
+      options.TokenValidationParameters = new TokenValidationParameters
+      {
+          ValidateIssuer = true,
+          ValidateAudience = true,
+          ValidateLifetime = true,          // reject expired tokens
+          ValidateIssuerSigningKey = true,  // verify the signature
+          ValidIssuer = cfg["Jwt:Issuer"],
+          ValidAudience = cfg["Jwt:Audience"],
+          IssuerSigningKey = new SymmetricSecurityKey(
+              Encoding.UTF8.GetBytes(cfg["Jwt:Key"]))
+      };
+  });
+
+app.UseAuthentication();
+app.UseAuthorization();</code></pre>
+
+      <h3>Role-based authorization</h3>
+      <p>Once roles are claims in the token, protecting an endpoint is declarative:</p>
+      <pre><code>[Authorize(Roles = "Admin,Registrar")]
+[HttpPost("admissions")]
+public IActionResult CreateAdmission(AdmissionDto dto) { ... }</code></pre>
+
+      <h2>Common mistakes that break "secured"</h2>
+      <ul>
+        <li><strong>Putting secrets in the payload.</strong> It's readable by anyone. Claims are for identity and roles, not passwords or PII.</li>
+        <li><strong>Not validating lifetime.</strong> Skipping <code>ValidateLifetime</code> means expired tokens live forever.</li>
+        <li><strong>Long-lived tokens with no refresh strategy.</strong> Use short-lived access tokens plus a refresh-token flow so a stolen token has a small blast radius.</li>
+        <li><strong>Weak or committed signing keys.</strong> The key must be long, random, and stored in configuration/secrets — never in source control.</li>
+        <li><strong>Trusting client-supplied identifiers.</strong> Authorize on claims from the verified token, not on ids in the request body.</li>
+      </ul>
+
+      <p>
+        This is the model securing the <a class="inline" href="../projects/nucleus-edu.html">Nucleus EDU</a>
+        API across 10+ modules, and the borrower-verification flows in the
+        <a class="inline" href="../projects/nvizion.html">nVizion</a> loan platform.
+      </p>
+
+      <div class="doc-nav">
+        <a class="read" href="multi-tenant-architecture.html">← Multi-Tenant Architecture</a>
+        <a class="read" href="sql-server-performance.html">Next: SQL Performance →</a>
+      </div>
+    </article>
+  </div>
+
+  <script src="../components.js"></script>
+</body>
+</html>

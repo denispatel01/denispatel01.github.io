@@ -6,33 +6,16 @@
   <title>Denis Patel — Senior .NET Developer</title>
   <meta name="description" content="Denis Patel — Senior .NET Developer with 6+ years building enterprise web platforms with ASP.NET Core, Angular, and SQL Server. Available for freelance projects." />
   <meta name="author" content="Denis Patel" />
-
-  <!-- Open Graph (for link previews on Upwork, LinkedIn, WhatsApp) -->
   <meta property="og:title" content="Denis Patel — Senior .NET Developer" />
   <meta property="og:description" content="6+ years building enterprise ASP.NET Core + Angular + SQL Server platforms. Available for freelance." />
   <meta property="og:type" content="website" />
-
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👨‍💻</text></svg>" />
 </head>
-<body>
-  <!-- NAV -->
-  <header class="nav" id="nav">
-    <div class="container nav-inner">
-      <a href="#top" class="brand">DP<span>.</span></a>
-      <nav class="nav-links">
-        <a href="#about">About</a>
-        <a href="#skills">Skills</a>
-        <a href="#experience">Experience</a>
-        <a href="#projects">Projects</a>
-        <a href="#contact" class="btn btn-sm">Hire me</a>
-      </nav>
-      <button class="nav-toggle" aria-label="Menu" id="navToggle">☰</button>
-    </div>
-  </header>
+<body data-base="" data-page="home">
 
   <!-- HERO -->
   <section id="top" class="hero">
@@ -47,7 +30,7 @@
       </p>
       <div class="hero-cta">
         <a href="#contact" class="btn">Let's work together</a>
-        <a href="#projects" class="btn btn-ghost">View my work</a>
+        <a href="projects.html" class="btn btn-ghost">View my work</a>
       </div>
       <div class="hero-stats">
         <div><strong>6+</strong><span>Years experience</span></div>
@@ -105,7 +88,7 @@
     <div class="container">
       <p class="section-tag">02 — Skills</p>
       <h2>Technical toolkit</h2>
-      <div class="skills-grid" id="skillsGrid"><!-- injected by script.js --></div>
+      <div class="skills-grid" id="skillsGrid"></div>
     </div>
   </section>
 
@@ -114,23 +97,56 @@
     <div class="container">
       <p class="section-tag">03 — Experience</p>
       <h2>Where I've made an impact</h2>
-      <div class="timeline" id="timeline"><!-- injected by script.js --></div>
+      <div class="timeline" id="timeline"></div>
     </div>
   </section>
 
-  <!-- PROJECTS -->
+  <!-- PROJECTS TEASER -->
   <section id="projects" class="section alt">
     <div class="container">
       <p class="section-tag">04 — Selected Projects</p>
       <h2>Work I'm proud of</h2>
-      <div class="projects-grid" id="projectsGrid"><!-- injected by script.js --></div>
+      <div class="projects-grid" id="projectsGrid"></div>
+      <div style="text-align:center;margin-top:36px">
+        <a href="projects.html" class="btn">See detailed case studies →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section id="services" class="section">
+    <div class="container">
+      <p class="section-tag">05 — Services</p>
+      <h2>How I can help you</h2>
+      <div class="services-grid">
+        <div class="service-card reveal"><div class="ico">🔧</div><h3>Backend & API Development</h3><p>REST APIs in ASP.NET Core with JWT security, clean architecture, EF Core / Dapper, Swagger docs, and webhooks.</p></div>
+        <div class="service-card reveal"><div class="ico">🖥️</div><h3>Full-Stack Web Apps</h3><p>End-to-end builds with ASP.NET Core + Angular, from database schema to responsive UI.</p></div>
+        <div class="service-card reveal"><div class="ico">🏗️</div><h3>Legacy Modernization</h3><p>Ground-up rewrites of legacy systems into modular, multi-tenant, API-first architectures — my specialty.</p></div>
+        <div class="service-card reveal"><div class="ico">⚡</div><h3>SQL Server Performance</h3><p>Stored-procedure tuning, indexing, server-side pagination, and profiling to keep apps fast at scale.</p></div>
+        <div class="service-card reveal"><div class="ico">🔌</div><h3>Third-Party Integrations</h3><p>Payment gateways, KYC/credit APIs, Google OAuth & Drive, WhatsApp/SMS, and CRM sync.</p></div>
+        <div class="service-card reveal"><div class="ico">☁️</div><h3>Deployment & DevOps</h3><p>AWS EC2/S3, Azure App Service, IIS/SSL, and multi-environment release management.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROCESS -->
+  <section class="section alt">
+    <div class="container">
+      <p class="section-tag">06 — How I work</p>
+      <h2>My delivery process</h2>
+      <div class="process">
+        <div class="step reveal"><h3>Understand</h3><p>Clarify goals, constraints, and success criteria before writing any code.</p></div>
+        <div class="step reveal"><h3>Design</h3><p>Data model, API contract, and architecture — reviewed with you up front.</p></div>
+        <div class="step reveal"><h3>Build & Review</h3><p>Iterative delivery in short cycles, with code reviews and clean commits.</p></div>
+        <div class="step reveal"><h3>Ship & Support</h3><p>Deploy across environments, monitor, and stay available for fixes.</p></div>
+      </div>
     </div>
   </section>
 
   <!-- CONTACT -->
   <section id="contact" class="section contact">
     <div class="container contact-inner">
-      <p class="section-tag">05 — Contact</p>
+      <p class="section-tag">07 — Contact</p>
       <h2>Let's build something great.</h2>
       <p class="lead center">
         Available for freelance and contract work — API development, full-stack builds,
@@ -144,12 +160,7 @@
     </div>
   </section>
 
-  <footer class="footer">
-    <div class="container">
-      <p>© <span id="year"></span> Denis Patel · Senior .NET Developer · Built with plain HTML/CSS/JS</p>
-    </div>
-  </footer>
-
   <script src="script.js"></script>
+  <script src="components.js"></script>
 </body>
 </html>

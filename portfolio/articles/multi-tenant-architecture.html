@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multi-Tenant Architecture in ASP.NET Core · Denis Patel</title>
+  <meta name="description" content="The three ways to isolate tenant data in ASP.NET Core, and how to implement database-per-tenant with per-request connection resolution." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👨‍💻</text></svg>" />
+</head>
+<body data-base="../" data-page="articles" data-progress="on">
+
+  <section class="page-head">
+    <div class="container">
+      <p class="crumbs"><a href="../articles.html">← Articles</a> / Multi-Tenant Architecture</p>
+      <p class="eyebrow">Architecture</p>
+      <h1>Multi-Tenant Architecture in ASP.NET Core</h1>
+    </div>
+  </section>
+
+  <div class="container">
+    <article class="doc">
+      <p class="lead-p">
+        "Multi-tenant" means one application instance serves many isolated customers
+        (tenants). The hard question isn't the code — it's <strong>where you draw the isolation
+        boundary</strong>. Get it wrong and you either leak data between tenants or drown in
+        maintenance. Here's how I think about it, and what I shipped for a multi-campus
+        school ERP.
+      </p>
+
+      <h2>Three isolation models</h2>
+      <p>There are three common approaches, from least to most isolated:</p>
+      <ol>
+        <li><strong>Shared database, shared schema</strong> — every table has a <code>TenantId</code> column and every query filters on it. Cheapest to run, but one missing filter leaks data, and a heavy tenant slows everyone.</li>
+        <li><strong>Shared database, separate schema</strong> — each tenant gets its own schema. Cleaner separation, but migrations multiply.</li>
+        <li><strong>Database per tenant</strong> — each tenant has its own database. Strongest isolation, easy per-tenant backup/restore, and no cross-tenant query risk. The trade-off is managing more databases.</li>
+      </ol>
+
+      <blockquote>
+        For a school ERP where each campus holds sensitive student data, isolation wins.
+        I chose <strong>database-per-tenant with per-request connection resolution</strong>.
+      </blockquote>
+
+      <h2>The core idea: resolve the connection per request</h2>
+      <p>
+        Instead of one deployment per campus, a single deployment figures out <em>which</em>
+        database to talk to based on the authenticated tenant on each request. The tenant
+        comes from a trusted source — typically a claim in the JWT — never from user input.
+      </p>
+
+      <pre><code>// 1) Resolve the current tenant from the request (JWT claim)
+public class TenantContext
+{
+    public string TenantId { get; }
+    public TenantContext(IHttpContextAccessor http)
+    {
+        TenantId = http.HttpContext?.User
+            .FindFirst("tenant")?.Value
+            ?? throw new UnauthorizedAccessException("No tenant.");
+    }
+}
+
+// 2) Map tenant -> connection string (from config, not hard-coded)
+public string ResolveConnection(string tenantId) =>
+    _config.GetSection($"Tenants:{tenantId}:ConnectionString").Value
+        ?? throw new InvalidOperationException($"Unknown tenant {tenantId}");
+
+// 3) Configure EF Core to use the resolved connection
+services.AddDbContext&lt;AppDbContext&gt;((sp, options) =>
+{
+    var tenant = sp.GetRequiredService&lt;TenantContext&gt;();
+    var cs = sp.GetRequiredService&lt;ITenantStore&gt;().ResolveConnection(tenant.TenantId);
+    options.UseSqlServer(cs);
+});</code></pre>
+
+      <div class="callout">
+        <h4>The golden rule</h4>
+        <p>The tenant identifier must come from a <strong>trusted, server-verified source</strong> (a signed JWT claim), never from a query string or header the client can set. Otherwise multi-tenancy becomes a data-leak vulnerability.</p>
+      </div>
+
+      <h2>Configuration over hard-coding</h2>
+      <p>
+        Connection strings live in environment-driven configuration, not in code. That's
+        what lets the same build run in Dev, Staging, UAT, and Production, and lets you add
+        a new campus by adding config — not by redeploying.
+      </p>
+
+      <h2>What you get</h2>
+      <ul>
+        <li><strong>Strong data isolation</strong> — no cross-tenant query can accidentally return another campus's rows.</li>
+        <li><strong>Per-tenant operations</strong> — back up, restore, or migrate one campus without touching the others.</li>
+        <li><strong>One codebase, one deployment</strong> — the maintenance win that makes multi-tenancy worth it.</li>
+      </ul>
+
+      <p>
+        This is exactly the architecture behind <a class="inline" href="../projects/nucleus-edu.html">Nucleus EDU</a>,
+        which serves 2,200+ users across multiple campuses from a single API deployment.
+      </p>
+
+      <div class="doc-nav">
+        <a class="read" href="../articles.html">← All articles</a>
+        <a class="read" href="jwt-authentication.html">Next: JWT Authentication →</a>
+      </div>
+    </article>
+  </div>
+
+  <script src="../components.js"></script>
+</body>
+</html>

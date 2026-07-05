@@ -170,26 +170,8 @@ function render() {
     </div>`).join("");
 }
 
-/* ---------- Interactions ---------- */
-function init() {
+/* ---------- Render data (nav/footer/reveal handled by components.js) ---------- */
+document.addEventListener("DOMContentLoaded", function () {
   render();
-  document.getElementById("year").textContent = new Date().getFullYear();
-
-  // Nav scroll shadow
-  const nav = document.getElementById("nav");
-  window.addEventListener("scroll", () => nav.classList.toggle("scrolled", window.scrollY > 10));
-
-  // Mobile menu
-  const toggle = document.getElementById("navToggle");
-  const links = document.querySelector(".nav-links");
-  toggle.addEventListener("click", () => links.classList.toggle("open"));
-  links.querySelectorAll("a").forEach(a => a.addEventListener("click", () => links.classList.remove("open")));
-
-  // Reveal on scroll
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
-  }, { threshold: 0.12 });
-  document.querySelectorAll(".reveal").forEach(el => io.observe(el));
-}
-
-document.addEventListener("DOMContentLoaded", init);
+  if (window.revealScan) window.revealScan(); // observe freshly-injected cards
+});

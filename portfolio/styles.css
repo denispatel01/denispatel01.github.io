@@ -145,8 +145,88 @@ a { color: inherit; text-decoration: none; }
 .contact-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
 
 /* ---------- FOOTER ---------- */
-.footer { padding: 34px 0; border-top: 1px solid var(--border); text-align: center; }
-.footer p { color: var(--muted); font-size: .85rem; }
+.footer { padding: 44px 0; border-top: 1px solid var(--border); margin-top: 40px; }
+.footer-inner { display: flex; flex-wrap: wrap; gap: 20px 40px; align-items: center; justify-content: space-between; }
+.footer-inner p { color: var(--muted); font-size: .85rem; margin-top: 6px; }
+.footer-links { display: flex; gap: 22px; flex-wrap: wrap; }
+.footer-links a { color: var(--muted); font-size: .9rem; }
+.footer-links a:hover { color: var(--accent); }
+.footer .copy { width: 100%; text-align: center; padding-top: 20px; margin-top: 8px; border-top: 1px solid var(--border); }
+.nav-links a.is-active { color: var(--text); }
+
+/* ---------- READING PROGRESS ---------- */
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0; background: var(--grad); z-index: 60; transition: width .1s; }
+
+/* ---------- SERVICES ---------- */
+.services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+.service-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; transition: transform .2s, border-color .2s; }
+.service-card:hover { transform: translateY(-4px); border-color: var(--accent); }
+.service-card .ico { font-size: 1.8rem; }
+.service-card h3 { font-size: 1.15rem; margin: 12px 0 8px; }
+.service-card p { color: var(--muted); font-size: .92rem; }
+
+/* ---------- PROCESS ---------- */
+.process { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; counter-reset: step; }
+.process .step { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; position: relative; }
+.process .step::before { counter-increment: step; content: "0" counter(step); font-family: 'JetBrains Mono', monospace; font-size: 1.6rem; font-weight: 700; background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.process .step h3 { font-size: 1.05rem; margin: 8px 0 6px; }
+.process .step p { color: var(--muted); font-size: .9rem; }
+
+/* ---------- PROJECT LISTING PAGE ---------- */
+.page-head { padding: 70px 0 20px; }
+.page-head .eyebrow { margin-bottom: 14px; }
+.page-head h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; letter-spacing: -1px; }
+.page-head p { color: var(--muted); max-width: 620px; margin-top: 14px; font-size: 1.05rem; }
+.crumbs { font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--muted); margin-bottom: 18px; }
+.crumbs a { color: var(--accent); }
+
+.proj-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 22px; padding-bottom: 40px; }
+.proj-list-card { display: block; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; transition: transform .2s, border-color .2s; }
+.proj-list-card:hover { transform: translateY(-5px); border-color: var(--accent2); }
+.proj-list-card .tag { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--accent2); letter-spacing: 1px; }
+.proj-list-card h3 { font-size: 1.35rem; margin: 10px 0; }
+.proj-list-card p { color: var(--muted); font-size: .93rem; margin-bottom: 16px; }
+.proj-list-card .read { color: var(--accent); font-weight: 600; font-size: .9rem; }
+
+/* ---------- CASE STUDY / ARTICLE (prose) ---------- */
+.doc { max-width: 760px; margin: 0 auto; padding: 20px 0 40px; }
+.doc .meta-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 30px; }
+.doc .badge { font-family: 'JetBrains Mono', monospace; font-size: .74rem; background: rgba(110,168,254,.1); border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 999px; }
+.doc h2 { font-size: 1.5rem; margin: 40px 0 14px; letter-spacing: -.5px; }
+.doc h3 { font-size: 1.15rem; margin: 26px 0 10px; }
+.doc p { color: #c3cad8; margin-bottom: 16px; line-height: 1.8; }
+.doc ul, .doc ol { color: #c3cad8; margin: 0 0 18px 22px; line-height: 1.8; }
+.doc li { margin-bottom: 8px; }
+.doc strong { color: var(--text); }
+.doc a.inline { color: var(--accent); text-decoration: underline; }
+.doc blockquote { border-left: 3px solid var(--accent); padding: 6px 20px; margin: 22px 0; color: var(--muted); font-style: italic; background: var(--bg-alt); border-radius: 0 10px 10px 0; }
+.doc pre { background: #0d1017; border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; overflow-x: auto; margin: 0 0 20px; }
+.doc code { font-family: 'JetBrains Mono', monospace; font-size: .86rem; color: #9ecbff; }
+.doc p code, .doc li code { background: rgba(110,168,254,.1); padding: 2px 7px; border-radius: 6px; font-size: .82rem; }
+.doc .lead-p { font-size: 1.15rem; color: var(--muted); }
+
+/* Metric strip in case studies */
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px; margin: 26px 0; }
+.metrics .m { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; text-align: center; }
+.metrics .m strong { display: block; font-size: 1.7rem; background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.metrics .m span { color: var(--muted); font-size: .78rem; }
+
+/* Callout box */
+.callout { background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--accent2); border-radius: 0 12px 12px 0; padding: 18px 22px; margin: 22px 0; }
+.callout h4 { font-size: .95rem; margin-bottom: 6px; color: var(--accent2); }
+.callout p { margin: 0; font-size: .92rem; }
+
+/* Architecture diagram wrapper */
+.diagram { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin: 24px 0; overflow-x: auto; }
+.diagram svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+.diagram .cap { text-align: center; color: var(--muted); font-size: .82rem; margin-top: 12px; }
+
+/* Prev/next + back links */
+.doc-nav { display: flex; justify-content: space-between; gap: 14px; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+.back-link { display: inline-block; margin-bottom: 10px; color: var(--accent); font-weight: 600; font-size: .9rem; }
+
+/* Tag chips reused (chip) already defined above */
+.tech-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 26px; }
 
 /* ---------- REVEAL ANIMATION ---------- */
 .reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s, transform .6s; }

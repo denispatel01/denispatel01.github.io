@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Articles — Denis Patel</title>
+  <meta name="description" content="Technical articles on .NET architecture, security, and SQL Server performance by Denis Patel." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👨‍💻</text></svg>" />
+</head>
+<body data-base="" data-page="articles">
+
+  <section class="page-head">
+    <div class="container">
+      <p class="eyebrow">Writing &amp; Theory</p>
+      <h1>Technical articles</h1>
+      <p>Short, practical write-ups on the patterns I use every day — architecture, security, and performance in the .NET world. Written from real project experience, not textbook theory.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:20px">
+    <div class="container">
+      <div class="proj-list">
+
+        <a class="proj-list-card reveal" href="articles/multi-tenant-architecture.html">
+          <span class="tag">ARCHITECTURE</span>
+          <h3>Multi-Tenant Architecture in ASP.NET Core</h3>
+          <p>The three ways to isolate tenant data, why I chose database-per-tenant with connection resolution, and how to wire it up cleanly.</p>
+          <span class="read">Read article →</span>
+        </a>
+
+        <a class="proj-list-card reveal" href="articles/jwt-authentication.html">
+          <span class="tag">SECURITY</span>
+          <h3>JWT Authentication &amp; Role-Based Authorization</h3>
+          <p>How JWT actually works, how to secure an ASP.NET Core API with it, and the mistakes that turn "secured" into "vulnerable".</p>
+          <span class="read">Read article →</span>
+        </a>
+
+        <a class="proj-list-card reveal" href="articles/sql-server-performance.html">
+          <span class="tag">PERFORMANCE</span>
+          <h3>Making Slow SQL Server Screens Fast</h3>
+          <p>A practical playbook: profiling, indexing, rewriting stored procedures, and server-side pagination — the moves that kept a 2,000-user platform responsive.</p>
+          <span class="read">Read article →</span>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <script src="components.js"></script>
+</body>
+</html>
