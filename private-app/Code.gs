@@ -161,7 +161,7 @@ function parseSchedule(raw) {
   try { const o = JSON.parse(raw); if (o && o.kind) return o; } catch (e) {}
   switch (String(raw)) {
     case "hourly":  return { kind: "hourly", everyHours: 1 };
-    case "daily":   return { kind: "custom", weekdays: [0,1,2,3,4,5,6], times: ["09:00"] };
+    case "daily":   return { kind: "daily", everyDays: 1, times: ["09:00"] };
     case "weekly":  return { kind: "weekly", weekdays: [1], times: ["09:00"] };
     case "monthly": return { kind: "monthly", monthdays: [1], times: ["09:00"] };
     default:        return { kind: "once" };
@@ -183,6 +183,20 @@ function computeNextFire(schedule, after) {
     const now = new Date();
     while (next <= now) next = new Date(next.getTime() + n * 3600 * 1000); // catch up, no burst
     return next;
+  }
+  if (s.kind === "daily") {
+    const n = Math.max(1, s.everyDays || 1);
+    const times = (s.times && s.times.length ? s.times : ["09:00"]).map(parseTime)
+      .sort(function (a, b) { return (a.h * 60 + a.m) - (b.h * 60 + b.m); });
+    const base = new Date(after.getFullYear(), after.getMonth(), after.getDate());
+    for (let i = 0; i < 800; i += n) {
+      const day = new Date(base.getFullYear(), base.getMonth(), base.getDate() + i);
+      for (let j = 0; j < times.length; j++) {
+        const slot = new Date(day.getFullYear(), day.getMonth(), day.getDate(), times[j].h, times[j].m, 0, 0);
+        if (slot > after) return slot;
+      }
+    }
+    return null;
   }
   const times = (s.times && s.times.length ? s.times : ["09:00"]).map(parseTime)
     .sort(function (a, b) { return (a.h * 60 + a.m) - (b.h * 60 + b.m); });
@@ -209,6 +223,10 @@ function computeNextFire(schedule, after) {
 function describeSchedule(s) {
   if (!s || s.kind === "once") return "one-time";
   if (s.kind === "hourly") return "every " + (s.everyHours || 1) + " hour(s)";
+  if (s.kind === "daily") {
+    const times = (s.times && s.times.length ? s.times : ["09:00"]).join(", ");
+    return "every " + (s.everyDays || 1) + " day(s) at " + times;
+  }
   const DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
   const times = (s.times && s.times.length ? s.times : ["09:00"]).join(", ");
   const wd = (s.weekdays || []).map(function (d) { return DOW[d]; }).join("/");

@@ -36,6 +36,22 @@ function fmtDate(d) {
   return isNaN(dt) ? d : dt.toLocaleString();
 }
 
+/* ---- relative time ---- */
+function relativeTime(iso) {
+  if (!iso) return "";
+  var target = new Date(iso);
+  var now = new Date();
+  var diff = target - now;
+  if (isNaN(target)) return "";
+  if (diff < 0) return "overdue";
+  var mins = Math.floor(diff / 60000);
+  if (mins < 60) return "in " + mins + "m";
+  var hrs = Math.floor(mins / 60);
+  if (hrs < 24) return "in " + hrs + "h " + (mins % 60) + "m";
+  var days = Math.floor(hrs / 24);
+  return "in " + days + "d " + (hrs % 24) + "h";
+}
+
 /* ---- tabs ---- */
 document.querySelectorAll(".tab").forEach(function (btn) {
   btn.addEventListener("click", function () {
@@ -120,40 +136,82 @@ function renderTodos(list) {
   list.sort(function (a, b) { return (a.done - b.done); });
   $("#todoList").innerHTML = list.length ? list.map(function (t) {
     return '<li class="item ' + (t.done ? "done" : "") + '">' +
-      '<div class="check ' + (t.done ? "on" : "") + '" onclick="ui.toggleTodo(\'' + t.id + '\')">' + (t.done ? "✓" : "") + '</div>' +
+      '<div class="check ' + (t.done ? "on" : "") + '" onclick="ui.toggleTodo(\'' + t.id + '\')"><span>' + (t.done ? "✓" : "") + '</span></div>' +
       '<div class="txt">' + esc(t.title) + '</div>' +
       '<span class="pill ' + esc(t.priority) + '">' + esc(t.priority) + '</span>' +
       '<button class="del" onclick="ui.delTodo(\'' + t.id + '\')">✕</button></li>';
   }).join("") : '<p class="hint">No tasks yet. Add one above.</p>';
 }
 
+/* ---------- Reminder schedule helpers ---------- */
 function parseSched(raw) {
   if (raw && typeof raw === "object") return raw;
   try { var o = JSON.parse(raw); if (o && o.kind) return o; } catch (e) {}
-  return { kind: "once" }; // legacy/unknown
+  return { kind: "once" };
 }
+
 var DOW_LBL = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
 function describeSchedClient(s) {
   if (!s || s.kind === "once") return "one-time";
-  if (s.kind === "hourly") return "🔁 every " + (s.everyHours || 1) + "h";
+  if (s.kind === "hourly") return "every " + (s.everyHours || 1) + " hour(s)";
+  if (s.kind === "daily") {
+    var times = (s.times && s.times.length ? s.times : ["09:00"]).join(", ");
+    return "every " + (s.everyDays || 1) + " day(s) at " + times;
+  }
   var times = (s.times && s.times.length ? s.times : ["09:00"]).join(", ");
-  var wd = (s.weekdays || []).map(function (d) { return DOW_LBL[d]; }).join("/");
-  var md = (s.monthdays || []).join("/");
-  if (s.kind === "weekly") return "🔁 weekly · " + wd + " · " + times;
-  if (s.kind === "monthly") return "🔁 monthly · day " + md + " · " + times;
-  return "🔁 custom · " + (wd ? wd + " " : "") + (md ? "day " + md + " " : "") + times;
+  var wd = (s.weekdays || []).map(function (d) { return DOW_LBL[d]; }).join(", ");
+  var md = (s.monthdays || []).join(", ");
+  if (s.kind === "weekly") return "weekly · " + wd + " · " + times;
+  if (s.kind === "monthly") return "monthly · day " + md + " · " + times;
+  return "custom · " + (wd ? wd + " " : "") + (md ? "day " + md + " " : "") + times;
 }
+
+function schedBadge(s) {
+  if (!s) return { cls: "badge-once", label: "One-time" };
+  switch (s.kind) {
+    case "hourly":  return { cls: "badge-hourly",  label: "⏱ Hourly" };
+    case "daily":   return { cls: "badge-daily",   label: "📅 Daily" };
+    case "weekly":  return { cls: "badge-weekly",  label: "📆 Weekly" };
+    case "monthly": return { cls: "badge-monthly", label: "🗓️ Monthly" };
+    case "once":    return { cls: "badge-once",    label: "🎯 Once" };
+    default:        return { cls: "badge-custom",  label: "⚙ Custom" };
+  }
+}
+
 function renderReminders(list) {
   list.sort(function (a, b) { return new Date(a.remindAt) - new Date(b.remindAt); });
-  $("#reminderList").innerHTML = list.length ? list.map(function (r) {
+  if (!list.length) {
+    $("#reminderList").innerHTML = '<p class="hint">No reminders set. Use the builder above or quick presets to add one.</p>';
+    return;
+  }
+  $("#reminderList").innerHTML = list.map(function (r) {
     var s = parseSched(r.schedule);
-    var recurring = s.kind !== "once";
-    var state = r.notified ? "✅ done · " : (recurring ? "🔁 next: " : "⏳ upcoming · ");
-    return '<li class="item">' +
-      '<div class="txt">' + esc(r.title) +
-      '<div class="sub">' + state + fmtDate(r.remindAt) + ' · ' + esc(describeSchedClient(s)) + '</div></div>' +
-      '<button class="del" onclick="ui.delReminder(\'' + r.id + '\')">✕</button></li>';
-  }).join("") : '<p class="hint">No reminders set.</p>';
+    var badge = schedBadge(s);
+    var isDone = !!r.notified;
+    var isRecurring = s.kind !== "once";
+    var statusCls = isDone ? "rem-status-done" : "rem-status-active";
+    var statusIcon = isDone ? "✅" : (isRecurring ? '<span class="pulse-dot"></span>' : '<span class="pulse-dot once-dot"></span>');
+    var nextLabel = isDone ? "Completed" : relativeTime(r.remindAt);
+
+    return '<li class="rem-card ' + statusCls + '">' +
+      '<div class="rem-card-header">' +
+        '<span class="rem-badge ' + badge.cls + '">' + badge.label + '</span>' +
+        '<div class="rem-card-actions">' +
+          '<span class="rem-status-indicator">' + statusIcon + '</span>' +
+          '<button class="del" onclick="ui.delReminder(\'' + r.id + '\')">✕</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="rem-card-body">' +
+        '<div class="rem-card-title">' + esc(r.title) + '</div>' +
+        '<div class="rem-card-schedule">🔁 ' + esc(describeSchedClient(s)) + '</div>' +
+        '<div class="rem-card-footer">' +
+          '<span class="rem-next-fire">' + (isDone ? '✅ Done' : '🕐 Next: ' + fmtDate(r.remindAt)) + '</span>' +
+          '<span class="rem-countdown ' + (isDone ? '' : 'active') + '">' + nextLabel + '</span>' +
+        '</div>' +
+      '</div>' +
+    '</li>';
+  }).join("");
 }
 
 /* ---------- Reminder builder (form → schedule object) ---------- */
@@ -177,6 +235,7 @@ function getMonthdays() {
   return ($("#remMonthdays").value || "").split(",").map(function (x) { return parseInt(x, 10); })
     .filter(function (n) { return n >= 1 && n <= 31; });
 }
+
 function buildSchedule() {
   var kind = $("#remKind").value;
   if (kind === "once") {
@@ -187,46 +246,112 @@ function buildSchedule() {
   if (kind === "hourly") {
     return { kind: "hourly", everyHours: Math.max(1, +$("#remEveryHours").value || 1) };
   }
-  var times = getTimes();
+  if (kind === "daily") {
+    var times = getTimes();
+    return { kind: "daily", everyDays: Math.max(1, +$("#remEveryDays").value || 1), times: times };
+  }
   if (kind === "weekly") {
     var wd = getWeekdays();
-    if (!wd.length) return { error: "Pick at least one weekday" };
+    if (!wd.length) return { error: "Pick at least one day" };
+    var times = getTimes();
     return { kind: "weekly", weekdays: wd, times: times };
   }
   if (kind === "monthly") {
     var md = getMonthdays();
     if (!md.length) return { error: "Enter at least one date (e.g. 1, 15)" };
+    var times = getTimes();
     return { kind: "monthly", monthdays: md, times: times };
   }
-  // custom: any mix
-  var cwd = getWeekdays(), cmd = getMonthdays();
-  if (!cwd.length && !cmd.length) return { error: "Pick weekdays and/or month dates" };
-  return { kind: "custom", weekdays: cwd, monthdays: cmd, times: times };
+  return { error: "Unknown schedule type" };
 }
+
 function resetBuilder() {
   $("#remTitle").value = "";
 }
+
+function applyPreset(preset) {
+  var kindSel = $("#remKind");
+  // clear previous weekday selections
+  [].forEach.call($("#remDow").querySelectorAll("button"), function (b) { b.classList.remove("on"); });
+  // clear times
+  $("#remTimes").innerHTML = "";
+
+  switch (preset) {
+    case "1h":  kindSel.value = "hourly"; $("#remEveryHours").value = 1; break;
+    case "2h":  kindSel.value = "hourly"; $("#remEveryHours").value = 2; break;
+    case "4h":  kindSel.value = "hourly"; $("#remEveryHours").value = 4; break;
+    case "6h":  kindSel.value = "hourly"; $("#remEveryHours").value = 6; break;
+    case "12h": kindSel.value = "hourly"; $("#remEveryHours").value = 12; break;
+    case "daily9":
+      kindSel.value = "daily"; $("#remEveryDays").value = 1;
+      addTimeInput("09:00"); break;
+    case "daily10":
+      kindSel.value = "daily"; $("#remEveryDays").value = 1;
+      addTimeInput("10:00"); break;
+    case "weekdays":
+      kindSel.value = "weekly";
+      [1,2,3,4,5].forEach(function (d) {
+        var btn = $("#remDow").querySelector('[data-d="' + d + '"]');
+        if (btn) btn.classList.add("on");
+      });
+      addTimeInput("09:00"); break;
+    case "weekends":
+      kindSel.value = "weekly";
+      [0,6].forEach(function (d) {
+        var btn = $("#remDow").querySelector('[data-d="' + d + '"]');
+        if (btn) btn.classList.add("on");
+      });
+      addTimeInput("10:00"); break;
+    case "every2d":
+      kindSel.value = "daily"; $("#remEveryDays").value = 2;
+      addTimeInput("09:00"); break;
+  }
+  // trigger visibility sync
+  syncKindVisibility();
+  // focus the title if empty
+  if (!$("#remTitle").value.trim()) $("#remTitle").focus();
+}
+
+function syncKindVisibility() {
+  var k = $("#remKind").value;
+  [].forEach.call(document.querySelectorAll(".rem-opt"), function (el) {
+    el.style.display = el.dataset.kind.split(" ").indexOf(k) >= 0 ? "" : "none";
+  });
+}
+
 function initReminderBuilder() {
-  // weekday toggle buttons
+  // weekday toggle buttons — all 7 days
   $("#remDow").innerHTML = DOW_LBL.map(function (d, i) {
-    return '<button type="button" data-d="' + i + '">' + d[0] + '</button>';
+    return '<button type="button" data-d="' + i + '">' + d + '</button>';
   }).join("");
   $("#remDow").addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (b) b.classList.toggle("on");
   });
   addTimeInput("09:00");
   $("#addTime").addEventListener("click", function () { addTimeInput("18:00"); });
+
   // show/hide option blocks per kind
-  function sync() {
-    var k = $("#remKind").value;
-    [].forEach.call(document.querySelectorAll(".rem-opt"), function (el) {
-      el.style.display = el.dataset.kind.split(" ").indexOf(k) >= 0 ? "" : "none";
+  $("#remKind").addEventListener("change", function () {
+    syncKindVisibility();
+    // ensure at least one time input for kinds that need it
+    if (["daily", "weekly", "monthly"].indexOf($("#remKind").value) >= 0 && $("#remTimes").children.length === 0) {
+      addTimeInput("09:00");
+    }
+  });
+  syncKindVisibility();
+
+  // preset buttons
+  document.querySelectorAll(".preset-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      // highlight active preset
+      document.querySelectorAll(".preset-btn").forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      applyPreset(btn.dataset.preset);
     });
-  }
-  $("#remKind").addEventListener("change", sync);
-  sync();
+  });
 }
 
+/* ---------- Vault ---------- */
 function renderVault(list) {
   $("#vaultList").innerHTML = list.length ? list.map(function (v) {
     return '<div class="vault-item">' +
@@ -238,6 +363,7 @@ function renderVault(list) {
   }).join("") : '<p class="hint">Vault is empty. Values stay blurred until you click them.</p>';
 }
 
+/* ---------- Notes ---------- */
 function renderNotes(list) {
   list.sort(function (a, b) { return new Date(b.updated) - new Date(a.updated); });
   $("#noteList").innerHTML = list.length ? list.map(function (n) {
@@ -259,5 +385,7 @@ window.addEventListener("load", function () {
   ui.loadReminders();
   ui.loadVault();
   ui.loadNotes();
+  // refresh countdown every minute
+  setInterval(function () { ui.loadReminders(); }, 60000);
 });
 </script>
