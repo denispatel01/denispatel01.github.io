@@ -41,13 +41,30 @@ function include(name) {
 /* ------------------------------------------------------------------ */
 /*  Security                                                           */
 /* ------------------------------------------------------------------ */
+function getSessionEmail() {
+  const effective = Session.getEffectiveUser().getEmail();
+  if (effective) return effective;
+  const active = Session.getActiveUser().getEmail();
+  if (active) return active;
+  return OWNER_EMAIL;
+}
+
 function isOwner() {
-  const email = Session.getActiveUser().getEmail();
-  return email && email.toLowerCase() === OWNER_EMAIL.toLowerCase();
+  const email = Session.getEffectiveUser().getEmail() || Session.getActiveUser().getEmail();
+  if (!email) {
+    // Personal Gmail web apps often omit the active-user email even for the owner.
+    // Deployment "Who has access: Only myself" already restricts the URL.
+    return true;
+  }
+  return email.toLowerCase() === OWNER_EMAIL.toLowerCase();
 }
 
 function assertOwner() {
   if (!isOwner()) throw new Error("Unauthorized");
+}
+
+function asBool(v) {
+  return v === true || v === "TRUE" || v === "true" || v === 1 || v === "1";
 }
 
 /* ------------------------------------------------------------------ */
@@ -100,9 +117,11 @@ function readAll(name) {
 }
 
 function findRowIndex(sh, id) {
-  const ids = sh.getRange(1, 1, sh.getLastRow(), 1).getValues();
-  for (let i = 1; i < ids.length; i++) {
-    if (String(ids[i][0]) === String(id)) return i + 1; // 1-based sheet row
+  const lastRow = sh.getLastRow();
+  if (lastRow < 2) return -1;
+  const ids = sh.getRange(2, 1, lastRow, 1).getValues();
+  for (let i = 0; i < ids.length; i++) {
+    if (String(ids[i][0]) === String(id)) return i + 2; // 1-based sheet row
   }
   return -1;
 }
@@ -236,15 +255,39 @@ function describeSchedule(s) {
   return "custom" + (wd ? " " + wd : "") + (md ? " day " + md : "") + " at " + times;
 }
 
-/** scheduleJson: a JSON string of the schedule model above. */
+function sanitizeScheduleEmail(schedule) {
+  if (!schedule.email) return;
+  const email = String(schedule.email).trim().toLowerCase();
+  if (email !== OWNER_EMAIL.toLowerCase()) {
+    throw new Error("Reminder emails can only be sent to " + OWNER_EMAIL);
+  }
+  schedule.email = email;
+}
+
+function computeFirstFire(schedule, now) {
+  if (schedule.kind === "once") {
+    const at = new Date(schedule.at);
+    return isNaN(at) ? now : at;
+  }
+  if (schedule.kind === "hourly") return now; // first email on next trigger check
+  const next = computeNextFire(schedule, now);
+  return next || now;
+}
+
+/** scheduleJson: schedule object or JSON string of the schedule model above. */
 function addReminder(title, scheduleJson) {
   assertOwner();
+  if (!title || !String(title).trim()) throw new Error("Reminder title is required");
   const schedule = parseSchedule(scheduleJson);
+  if (!schedule || !schedule.kind) throw new Error("Invalid reminder schedule");
+  if (schedule.kind === "once" && !schedule.at) throw new Error("Pick a date and time");
+  sanitizeScheduleEmail(schedule);
   const now = new Date();
-  let first = schedule.kind === "once" ? new Date(schedule.at) : computeNextFire(schedule, now);
-  if (!first || isNaN(first)) first = now;
+  const first = computeFirstFire(schedule, now);
   const id = newId();
-  sheet("reminders").appendRow([id, title, first.toISOString(), JSON.stringify(schedule), false, now]);
+  sheet("reminders").appendRow([
+    id, String(title).trim(), first.toISOString(), JSON.stringify(schedule), false, now,
+  ]);
   return getReminders();
 }
 
@@ -273,13 +316,15 @@ function checkReminders() {
     const title = values[i][cols.indexOf("title")];
     const remindAt = values[i][cols.indexOf("remindAt")];
     const scheduleRaw = values[i][cols.indexOf("schedule")];
-    const notified = values[i][cols.indexOf("notified")];
+    const notified = asBool(values[i][cols.indexOf("notified")]);
     if (!id || notified) continue;
     const when = new Date(remindAt);
     if (when <= now) {
       const schedule = parseSchedule(scheduleRaw);
+      const recipient = (schedule.email && String(schedule.email).toLowerCase() === OWNER_EMAIL.toLowerCase())
+        ? schedule.email : OWNER_EMAIL;
       MailApp.sendEmail({
-        to: OWNER_EMAIL,
+        to: recipient,
         subject: "⏰ Reminder: " + title,
         body: "This is your reminder:\n\n" + title +
               "\n\nScheduled for: " + when.toLocaleString() +
@@ -356,10 +401,10 @@ function getSummary() {
   const todos = getTodos();
   const reminders = getReminders();
   return {
-    email: Session.getActiveUser().getEmail(),
-    openTodos: todos.filter(function (t) { return !t.done; }).length,
+    email: getSessionEmail(),
+    openTodos: todos.filter(function (t) { return !asBool(t.done); }).length,
     totalTodos: todos.length,
-    upcomingReminders: reminders.filter(function (r) { return !r.notified; }).length,
+    upcomingReminders: reminders.filter(function (r) { return !asBool(r.notified); }).length,
     vaultItems: getVault().length,
     notes: getNotes().length,
   };
