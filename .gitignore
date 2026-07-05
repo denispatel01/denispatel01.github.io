@@ -1,0 +1,8 @@
+# OS / editor
+Thumbs.db
+.DS_Store
+*.log
+
+# Claude local
+.claude/
+scratchpad/

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <?!= include('Stylesheet'); ?>
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">🔒 My Dashboard</div>
+      <nav>
+        <button class="tab active" data-tab="home">🏠 Home</button>
+        <button class="tab" data-tab="todos">✅ To-Do</button>
+        <button class="tab" data-tab="reminders">⏰ Reminders</button>
+        <button class="tab" data-tab="vault">🔐 Vault</button>
+        <button class="tab" data-tab="notes">📝 Notes</button>
+      </nav>
+      <div class="who" id="who">…</div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <!-- HOME -->
+      <section class="view active" id="view-home">
+        <h1>Welcome back 👋</h1>
+        <div class="cards" id="summaryCards">
+          <div class="card muted">Loading…</div>
+        </div>
+      </section>
+
+      <!-- TODOS -->
+      <section class="view" id="view-todos">
+        <h1>To-Do</h1>
+        <div class="row">
+          <input id="todoInput" placeholder="What needs doing?" />
+          <select id="todoPriority">
+            <option value="normal">Normal</option>
+            <option value="high">High</option>
+            <option value="low">Low</option>
+          </select>
+          <button class="btn" onclick="ui.addTodo()">Add</button>
+        </div>
+        <ul class="list" id="todoList"></ul>
+      </section>
+
+      <!-- REMINDERS -->
+      <section class="view" id="view-reminders">
+        <h1>Reminders</h1>
+        <p class="hint">You'll get an email when a reminder is due (requires the trigger — see README).</p>
+        <div class="row">
+          <input id="remTitle" placeholder="Remind me to…" />
+          <input id="remWhen" type="datetime-local" />
+          <button class="btn" onclick="ui.addReminder()">Add</button>
+        </div>
+        <ul class="list" id="reminderList"></ul>
+      </section>
+
+      <!-- VAULT -->
+      <section class="view" id="view-vault">
+        <h1>Personal Vault</h1>
+        <p class="hint">Private key–value store (IDs, account numbers, passwords, etc.). Only you can open this app.</p>
+        <div class="row">
+          <input id="vLabel" placeholder="Label (e.g. Passport No.)" />
+          <input id="vValue" placeholder="Value" />
+          <input id="vCat" placeholder="Category" />
+          <button class="btn" onclick="ui.addVault()">Save</button>
+        </div>
+        <div class="vault-grid" id="vaultList"></div>
+      </section>
+
+      <!-- NOTES -->
+      <section class="view" id="view-notes">
+        <h1>Notes</h1>
+        <div class="notes-layout">
+          <div class="notes-editor">
+            <input id="noteTitle" placeholder="Note title" />
+            <textarea id="noteBody" placeholder="Write here…"></textarea>
+            <div class="row">
+              <button class="btn" onclick="ui.saveNote()">Save note</button>
+              <button class="btn ghost" onclick="ui.newNote()">New</button>
+            </div>
+          </div>
+          <ul class="list notes-list" id="noteList"></ul>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div class="loader" id="loader"><div class="spin"></div></div>
+
+  <?!= include('JavaScript'); ?>
+</body>
+</html>

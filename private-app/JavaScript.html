@@ -1,0 +1,170 @@
+<script>
+/* Thin client — all data lives server-side (Google Sheet). */
+const $ = (s) => document.querySelector(s);
+let editingNoteId = null;
+
+/* ---- server call wrapper ---- */
+function call(fn, args, onDone) {
+  $("#loader").classList.add("show");
+  google.script.run
+    .withSuccessHandler(function (res) {
+      $("#loader").classList.remove("show");
+      if (onDone) onDone(res);
+    })
+    .withFailureHandler(function (err) {
+      $("#loader").classList.remove("show");
+      toast("⚠️ " + err.message);
+    })[fn].apply(google.script.run, args || []);
+}
+
+function toast(msg) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(function () { t.classList.remove("show"); }, 2200);
+}
+
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+  });
+}
+
+function fmtDate(d) {
+  if (!d) return "";
+  const dt = new Date(d);
+  return isNaN(dt) ? d : dt.toLocaleString();
+}
+
+/* ---- tabs ---- */
+document.querySelectorAll(".tab").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    document.querySelectorAll(".tab").forEach(function (b) { b.classList.remove("active"); });
+    document.querySelectorAll(".view").forEach(function (v) { v.classList.remove("active"); });
+    btn.classList.add("active");
+    $("#view-" + btn.dataset.tab).classList.add("active");
+  });
+});
+
+/* ==================================================================
+   UI actions
+================================================================== */
+const ui = {
+  /* ---- summary ---- */
+  loadSummary: function () {
+    call("getSummary", [], function (s) {
+      $("#who").textContent = "Signed in as " + s.email;
+      $("#summaryCards").innerHTML =
+        card(s.openTodos, "Open to-dos") +
+        card(s.upcomingReminders, "Upcoming reminders") +
+        card(s.vaultItems, "Vault items") +
+        card(s.notes, "Notes");
+    });
+  },
+
+  /* ---- todos ---- */
+  loadTodos: function () { call("getTodos", [], renderTodos); },
+  addTodo: function () {
+    const t = $("#todoInput").value.trim();
+    if (!t) return;
+    call("addTodo", [t, $("#todoPriority").value], renderTodos);
+    $("#todoInput").value = "";
+  },
+  toggleTodo: function (id) { call("toggleTodo", [id], renderTodos); },
+  delTodo: function (id) { call("deleteTodo", [id], renderTodos); },
+
+  /* ---- reminders ---- */
+  loadReminders: function () { call("getReminders", [], renderReminders); },
+  addReminder: function () {
+    const t = $("#remTitle").value.trim();
+    const w = $("#remWhen").value;
+    if (!t || !w) { toast("Enter a title and time"); return; }
+    call("addReminder", [t, new Date(w).toISOString()], renderReminders);
+    $("#remTitle").value = ""; $("#remWhen").value = "";
+  },
+  delReminder: function (id) { call("deleteReminder", [id], renderReminders); },
+
+  /* ---- vault ---- */
+  loadVault: function () { call("getVault", [], renderVault); },
+  addVault: function () {
+    const l = $("#vLabel").value.trim();
+    const v = $("#vValue").value.trim();
+    if (!l || !v) { toast("Enter a label and value"); return; }
+    call("addVaultItem", [l, v, $("#vCat").value.trim()], renderVault);
+    $("#vLabel").value = ""; $("#vValue").value = ""; $("#vCat").value = "";
+  },
+  delVault: function (id) { call("deleteVaultItem", [id], renderVault); },
+
+  /* ---- notes ---- */
+  loadNotes: function () { call("getNotes", [], renderNotes); },
+  newNote: function () { editingNoteId = null; $("#noteTitle").value = ""; $("#noteBody").value = ""; $("#noteTitle").focus(); },
+  saveNote: function () {
+    const t = $("#noteTitle").value.trim() || "Untitled";
+    call("saveNote", [editingNoteId, t, $("#noteBody").value], function (notes) {
+      editingNoteId = null; $("#noteTitle").value = ""; $("#noteBody").value = "";
+      renderNotes(notes); toast("Saved ✓");
+    });
+  },
+  editNote: function (id, title, body) { editingNoteId = id; $("#noteTitle").value = title; $("#noteBody").value = body; },
+  delNote: function (id, e) { e.stopPropagation(); call("deleteNote", [id], renderNotes); },
+};
+
+/* ==================================================================
+   Renderers
+================================================================== */
+function card(n, l) { return '<div class="card"><div class="n">' + n + '</div><div class="l">' + l + '</div></div>'; }
+
+function renderTodos(list) {
+  list.sort(function (a, b) { return (a.done - b.done); });
+  $("#todoList").innerHTML = list.length ? list.map(function (t) {
+    return '<li class="item ' + (t.done ? "done" : "") + '">' +
+      '<div class="check ' + (t.done ? "on" : "") + '" onclick="ui.toggleTodo(\'' + t.id + '\')">' + (t.done ? "✓" : "") + '</div>' +
+      '<div class="txt">' + esc(t.title) + '</div>' +
+      '<span class="pill ' + esc(t.priority) + '">' + esc(t.priority) + '</span>' +
+      '<button class="del" onclick="ui.delTodo(\'' + t.id + '\')">✕</button></li>';
+  }).join("") : '<p class="hint">No tasks yet. Add one above.</p>';
+}
+
+function renderReminders(list) {
+  list.sort(function (a, b) { return new Date(a.remindAt) - new Date(b.remindAt); });
+  $("#reminderList").innerHTML = list.length ? list.map(function (r) {
+    return '<li class="item">' +
+      '<div class="txt">' + esc(r.title) +
+      '<div class="sub">' + (r.notified ? "✅ sent · " : "⏳ upcoming · ") + fmtDate(r.remindAt) + '</div></div>' +
+      '<button class="del" onclick="ui.delReminder(\'' + r.id + '\')">✕</button></li>';
+  }).join("") : '<p class="hint">No reminders set.</p>';
+}
+
+function renderVault(list) {
+  $("#vaultList").innerHTML = list.length ? list.map(function (v) {
+    return '<div class="vault-item">' +
+      '<button class="del" onclick="ui.delVault(\'' + v.id + '\')">✕</button>' +
+      '<div class="cat">' + esc(v.category) + '</div>' +
+      '<div class="lbl">' + esc(v.label) + '</div>' +
+      '<div class="val" title="click to reveal" onclick="this.classList.toggle(\'show\')">' + esc(v.value) + '</div>' +
+      '</div>';
+  }).join("") : '<p class="hint">Vault is empty. Values stay blurred until you click them.</p>';
+}
+
+function renderNotes(list) {
+  list.sort(function (a, b) { return new Date(b.updated) - new Date(a.updated); });
+  $("#noteList").innerHTML = list.length ? list.map(function (n) {
+    var body = String(n.body || "").replace(/'/g, "\\'").replace(/\n/g, " ");
+    var title = String(n.title || "").replace(/'/g, "\\'");
+    return '<li class="item" onclick="ui.editNote(\'' + n.id + '\',\'' + title + '\',\'' + body + '\')">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center">' +
+      '<h4>' + esc(n.title) + '</h4>' +
+      '<button class="del" onclick="ui.delNote(\'' + n.id + '\',event)">✕</button></div>' +
+      '<div class="sub">' + fmtDate(n.updated) + '</div></li>';
+  }).join("") : '<p class="hint">No notes yet.</p>';
+}
+
+/* ---- boot ---- */
+window.addEventListener("load", function () {
+  ui.loadSummary();
+  ui.loadTodos();
+  ui.loadReminders();
+  ui.loadVault();
+  ui.loadNotes();
+});
+</script>
