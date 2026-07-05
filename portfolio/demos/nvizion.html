@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>nVizion Loan Processing — Live Demo · Denis Patel</title>
+  <meta name="description" content="Interactive demo of the nVizion loan-processing workflow — application intake, simulated KYC & credit-bureau checks, and an automated lending decision." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="demos.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👨‍💻</text></svg>" />
+</head>
+<body style="overflow-x:hidden">
+
+  <div class="demo-banner">
+    <b>▶ Interactive Demo</b> — nVizion Loan Processing · simulated KYC &amp; credit checks, running in your browser.
+    <span class="spacer"></span>
+    <a href="../projects/nvizion.html">← Read the case study</a>
+  </div>
+
+  <div class="app">
+    <aside class="app-side">
+      <div class="logo">nVizion<span>·</span></div>
+      <div class="tenant">Loan Officer Console</div>
+      <nav class="app-nav" id="appNav">
+        <button data-v="new" class="active">➕ New Application</button>
+        <button data-v="pipeline">📋 Loan Pipeline</button>
+      </nav>
+    </aside>
+
+    <main class="app-main">
+      <!-- NEW APPLICATION WIZARD -->
+      <section class="demo-view active" id="v-new">
+        <h2>New Loan Application</h2>
+        <div class="sub">Walk an applicant from intake → verification → decision.</div>
+
+        <div class="steps" id="steps">
+          <div class="s active"><div class="n">1</div>Applicant</div>
+          <div class="s"><div class="n">2</div>Loan details</div>
+          <div class="s"><div class="n">3</div>Verification</div>
+          <div class="s"><div class="n">4</div>Decision</div>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="panel wiz" id="w1">
+          <h3>👤 Applicant information</h3>
+          <div class="form-grid">
+            <label>Full name<input class="demo-input" id="fName" value="Michael Carter" /></label>
+            <label>SSN (last 4)<input class="demo-input" id="fSSN" value="4821" maxlength="4" /></label>
+            <label>Annual income (USD)<input class="demo-input" id="fIncome" type="number" value="82000" /></label>
+            <label>State<select class="demo-input" id="fState"><option>MD</option><option>VA</option><option>NY</option><option>CA</option></select></label>
+          </div>
+          <div style="margin-top:16px"><button class="dbtn" onclick="wiz.next(1)">Continue →</button></div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="panel wiz" id="w2" style="display:none">
+          <h3>💵 Loan details</h3>
+          <div class="form-grid">
+            <label>Loan amount (USD)<input class="demo-input" id="fAmount" type="number" value="25000" /></label>
+            <label>Term (months)<select class="demo-input" id="fTerm"><option>24</option><option selected>36</option><option>48</option><option>60</option></select></label>
+            <label>Purpose<select class="demo-input" id="fPurpose"><option>Auto</option><option>Home improvement</option><option>Debt consolidation</option><option>Business</option></select></label>
+            <label>Existing monthly debt (USD)<input class="demo-input" id="fDebt" type="number" value="900" /></label>
+          </div>
+          <div style="margin-top:16px">
+            <button class="dbtn ghost" onclick="wiz.back(2)">← Back</button>
+            <button class="dbtn" onclick="wiz.next(2)">Run verification →</button>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="panel wiz" id="w3" style="display:none">
+          <h3>🔐 Identity &amp; credit verification</h3>
+          <p class="sub" style="margin-bottom:14px">Calling the borrower-verification providers (simulated).</p>
+          <div id="checks"></div>
+          <div class="log" id="verifyLog" style="margin-top:14px"></div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="panel wiz" id="w4" style="display:none">
+          <div id="decisionBox"></div>
+          <div style="margin-top:16px"><button class="dbtn ghost" onclick="wiz.reset()">↺ Start a new application</button></div>
+        </div>
+      </section>
+
+      <!-- PIPELINE -->
+      <section class="demo-view" id="v-pipeline">
+        <h2>Loan Pipeline</h2>
+        <div class="sub">All applications and their status across the workflow.</div>
+        <div class="stat-row" id="pipeStats"></div>
+        <div class="panel">
+          <table class="tbl">
+            <thead><tr><th>Applicant</th><th>Amount</th><th>Purpose</th><th>Credit</th><th>Status</th></tr></thead>
+            <tbody id="pipeBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast-d" id="toast"></div>
+  <script src="nvizion.js"></script>
+</body>
+</html>

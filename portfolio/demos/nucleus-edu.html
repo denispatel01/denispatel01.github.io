@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nucleus EDU — Live Demo · Denis Patel</title>
+  <meta name="description" content="Interactive demo of the Nucleus EDU school ERP — multi-tenant campus switching, student management, fees, and attendance analytics." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="demos.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👨‍💻</text></svg>" />
+</head>
+<body style="overflow-x:hidden">
+
+  <div class="demo-banner">
+    <b>▶ Interactive Demo</b> — Nucleus EDU School ERP · sample data, all running in your browser.
+    <span class="spacer"></span>
+    <a href="../projects/nucleus-edu.html">← Read the case study</a>
+  </div>
+
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="app-side">
+      <div class="logo">Nucleus<span>EDU</span></div>
+      <div class="tenant" id="tenantLabel">Campus: Downtown</div>
+      <nav class="app-nav" id="appNav">
+        <button data-v="dashboard" class="active">📊 Dashboard</button>
+        <button data-v="students">🎓 Students</button>
+        <button data-v="fees">💳 Fees</button>
+        <button data-v="attendance">📅 Attendance</button>
+        <button data-v="admissions">📝 Admissions</button>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="app-main">
+      <div class="app-topbar">
+        <div>
+          <h2 id="viewTitle">Dashboard</h2>
+          <div class="sub" id="viewSub">Overview for the selected campus</div>
+        </div>
+        <span class="grow"></span>
+        <label style="font-size:.8rem;color:var(--muted)">Campus (tenant):&nbsp;</label>
+        <select class="select" id="campusSel">
+          <option value="downtown">Downtown Campus</option>
+          <option value="riverside">Riverside Campus</option>
+          <option value="hilltop">Hilltop Campus</option>
+        </select>
+      </div>
+
+      <!-- DASHBOARD -->
+      <section class="demo-view active" id="v-dashboard">
+        <div class="stat-row" id="statRow"></div>
+        <div class="grid-2">
+          <div class="panel">
+            <h3>📈 Fee collection (last 6 months)</h3>
+            <div class="bars" id="feeChart"></div>
+          </div>
+          <div class="panel">
+            <h3>🎯 Attendance by grade (today)</h3>
+            <div class="bars" id="attChart"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="head"><h3>🔔 Recent activity</h3></div>
+          <div class="log" id="activityLog"></div>
+        </div>
+      </section>
+
+      <!-- STUDENTS -->
+      <section class="demo-view" id="v-students">
+        <div class="panel">
+          <div class="head">
+            <input class="demo-input" id="stuSearch" placeholder="🔍 Search by name, grade, or ID…" style="min-width:260px" />
+            <span class="bdg blue" id="stuCount"></span>
+          </div>
+          <table class="tbl">
+            <thead><tr><th>ID</th><th>Name</th><th>Grade</th><th>Guardian</th><th>Status</th></tr></thead>
+            <tbody id="stuBody"></tbody>
+          </table>
+          <div class="pager">
+            <span id="stuRange"></span>
+            <button id="stuPrev">‹ Prev</button>
+            <button id="stuNext">Next ›</button>
+          </div>
+          <p class="sub" style="margin-top:12px;margin-bottom:0">💡 This mimics <b>server-side pagination</b> — only one page of rows is "fetched" at a time, exactly how the real ERP stays fast with thousands of students.</p>
+        </div>
+      </section>
+
+      <!-- FEES -->
+      <section class="demo-view" id="v-fees">
+        <div class="stat-row" id="feeStats"></div>
+        <div class="panel">
+          <div class="head"><h3>💳 Fee ledger</h3>
+            <select class="select" id="feeFilter">
+              <option value="all">All</option><option value="Paid">Paid</option>
+              <option value="Pending">Pending</option><option value="Overdue">Overdue</option>
+            </select>
+          </div>
+          <table class="tbl">
+            <thead><tr><th>Student</th><th>Grade</th><th>Term Fee</th><th>Paid</th><th>Status</th><th></th></tr></thead>
+            <tbody id="feeBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ATTENDANCE -->
+      <section class="demo-view" id="v-attendance">
+        <div class="stat-row" id="attStats"></div>
+        <div class="panel">
+          <h3>📅 30-day attendance trend (whole school)</h3>
+          <div id="trendChart" style="overflow-x:auto"></div>
+        </div>
+        <div class="panel">
+          <div class="head"><h3>✉️ Scheduled daily report</h3>
+            <button class="dbtn sm" id="sendReport">Send today's report</button></div>
+          <div class="log" id="reportLog"><span class="dim">Click "Send today's report" to simulate the scheduled email delivery…</span></div>
+        </div>
+      </section>
+
+      <!-- ADMISSIONS -->
+      <section class="demo-view" id="v-admissions">
+        <div class="panel">
+          <div class="head"><h3>📝 Admission inquiries</h3>
+            <button class="dbtn sm" id="syncCrm">🔄 Sync new leads to ERPNext CRM</button></div>
+          <table class="tbl">
+            <thead><tr><th>Inquiry</th><th>Parent</th><th>Grade sought</th><th>Source</th><th>CRM</th></tr></thead>
+            <tbody id="admBody"></tbody>
+          </table>
+          <div class="log" id="syncLog" style="margin-top:14px"><span class="dim">Leads not yet synced. Click the sync button to push them to the CRM…</span></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast-d" id="toast"></div>
+  <script src="nucleus-edu.js"></script>
+</body>
+</html>
