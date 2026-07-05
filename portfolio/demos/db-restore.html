@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DB Restore Tool — Live Demo · Denis Patel</title>
+  <meta name="description" content="Interactive demo of the one-click SQL Server database restore automation tool — pick source and target, click once, watch it run." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="demos.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👨‍💻</text></svg>" />
+</head>
+<body style="overflow-x:hidden">
+
+  <div class="demo-banner">
+    <b>▶ Interactive Demo</b> — SQL Server DB Restore Automation · a one-click workflow (simulated).
+    <span class="spacer"></span>
+    <a href="../projects/db-restore-tool.html">← Read the case study</a>
+  </div>
+
+  <div style="max-width:720px;margin:30px auto;padding:0 20px">
+    <div class="panel">
+      <h3>🗄️ Database Restore Utility</h3>
+      <p class="sub" style="margin-bottom:18px">Recreates the internal PowerShell/WinForms tool: choose a backup and a target environment, click once — it handles the full multi-step restore.</p>
+
+      <div class="form-grid">
+        <label>Source backup (.bak)
+          <select class="demo-input" id="src">
+            <option>Production_2026-07-05_full.bak</option>
+            <option>Production_2026-07-04_full.bak</option>
+            <option>UAT_2026-07-05_full.bak</option>
+          </select>
+        </label>
+        <label>Target environment
+          <select class="demo-input" id="tgt">
+            <option>Staging</option><option>UAT</option><option>Dev</option>
+          </select>
+        </label>
+      </div>
+
+      <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:.88rem;color:var(--muted)">
+        <input type="checkbox" id="verify" checked /> Run post-restore verification (row counts + integrity check)
+      </label>
+
+      <div style="margin:18px 0 10px">
+        <button class="dbtn" id="runBtn" style="font-size:1rem;padding:13px 26px">▶ One-Click Restore</button>
+      </div>
+
+      <div class="prog" style="margin:14px 0"><span id="bar"></span></div>
+      <div class="log" id="log" style="min-height:180px"><span class="dim">Ready. Select a backup + target and click "One-Click Restore".</span></div>
+    </div>
+
+    <div class="callout" style="background:var(--card);border:1px solid var(--border);border-left:3px solid var(--accent2);border-radius:0 12px 12px 0;padding:16px 20px">
+      <h4 style="color:var(--accent2);margin-bottom:6px">Why this mattered</h4>
+      <p style="margin:0;color:var(--muted);font-size:.9rem">The manual version was ~8 careful steps a DBA repeated by hand across environments — easy to get wrong. This tool collapsed it into one button, saving time on every run and removing a whole class of human error.</p>
+    </div>
+  </div>
+
+  <div class="toast-d" id="toast"></div>
+  <script src="db-restore.js"></script>
+</body>
+</html>

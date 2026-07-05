@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Integrations Hub — Live Demo · Denis Patel</title>
+  <meta name="description" content="Interactive demo of the integration layer — ERPNext CRM sync, WhatsApp notifications, Google OAuth, and AWS S3 uploads, each with a live-simulated call log." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="demos.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👨‍💻</text></svg>" />
+</head>
+<body style="overflow-x:hidden">
+
+  <div class="demo-banner">
+    <b>▶ Interactive Demo</b> — Integration Hub · trigger each integration and watch the (simulated) API calls.
+    <span class="spacer"></span>
+    <a href="../projects/integrations.html">← Read the case study</a>
+  </div>
+
+  <div style="max-width:920px;margin:26px auto;padding:0 20px">
+    <h2 style="font-size:1.4rem;margin-bottom:4px">Integration Hub</h2>
+    <p class="sub" style="margin-bottom:22px">Each integration is wrapped behind a clean internal interface with its own auth and error handling.</p>
+
+    <div class="grid-2" id="cards"></div>
+
+    <div class="panel">
+      <div class="head"><h3>📜 Live call log</h3><button class="dbtn sm ghost" id="clear">Clear</button></div>
+      <div class="log" id="log" style="min-height:160px"><span class="dim">Trigger an integration above to see its calls here…</span></div>
+    </div>
+  </div>
+
+  <div class="toast-d" id="toast"></div>
+  <script src="integrations.js"></script>
+</body>
+</html>
