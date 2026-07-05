@@ -48,19 +48,57 @@
       <!-- REMINDERS -->
       <section class="view" id="view-reminders">
         <h1>Reminders</h1>
-        <p class="hint">You'll get an email when a reminder is due. Set it to repeat hourly, daily, weekly, or monthly (requires the trigger — see README).</p>
-        <div class="row">
+        <p class="hint">Get an email when a reminder is due. Choose exactly how it repeats — every N hours, on specific weekdays, on specific dates of the month, or a custom mix with multiple times (requires the trigger — see README).</p>
+
+        <div class="rem-builder">
           <input id="remTitle" placeholder="Remind me to…" />
-          <input id="remWhen" type="datetime-local" />
-          <select id="remRepeat">
-            <option value="none">One-time</option>
-            <option value="hourly">Every hour</option>
-            <option value="daily">Every day</option>
-            <option value="weekly">Every week</option>
-            <option value="monthly">Every month</option>
-          </select>
-          <button class="btn" onclick="ui.addReminder()">Add</button>
+
+          <div class="rem-line">
+            <label>Repeat</label>
+            <select id="remKind">
+              <option value="once">Once (specific date &amp; time)</option>
+              <option value="hourly">Every N hours</option>
+              <option value="weekly">Weekly — pick weekdays</option>
+              <option value="monthly">Monthly — pick dates</option>
+              <option value="custom">Custom — mix &amp; multiple times</option>
+            </select>
+          </div>
+
+          <!-- ONCE -->
+          <div class="rem-opt" data-kind="once">
+            <label>Date &amp; time</label>
+            <input type="datetime-local" id="remAt" />
+          </div>
+
+          <!-- HOURLY -->
+          <div class="rem-opt" data-kind="hourly" style="display:none">
+            <label>Every</label>
+            <input type="number" id="remEveryHours" value="1" min="1" max="72" style="width:80px" />
+            <span class="rem-sfx">hour(s)</span>
+          </div>
+
+          <!-- WEEKDAYS (weekly + custom) -->
+          <div class="rem-opt col" data-kind="weekly custom" style="display:none">
+            <label>On these weekdays</label>
+            <div class="dow" id="remDow"></div>
+          </div>
+
+          <!-- MONTH DATES (monthly + custom) -->
+          <div class="rem-opt col" data-kind="monthly custom" style="display:none">
+            <label>On these dates of month</label>
+            <input id="remMonthdays" placeholder="e.g. 1, 15, 28" />
+          </div>
+
+          <!-- TIMES (weekly + monthly + custom) -->
+          <div class="rem-opt col" data-kind="weekly monthly custom" style="display:none">
+            <label>At these time(s)</label>
+            <div id="remTimes" class="times"></div>
+            <button type="button" class="btn btn-sm ghost" id="addTime">+ add time</button>
+          </div>
+
+          <button class="btn" onclick="ui.addReminder()">Add reminder</button>
         </div>
+
         <ul class="list" id="reminderList"></ul>
       </section>
 

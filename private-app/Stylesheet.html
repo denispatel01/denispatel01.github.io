@@ -80,6 +80,24 @@
   .spin { width: 20px; height: 20px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: r .7s linear infinite; }
   @keyframes r { to { transform: rotate(360deg); } }
 
+  /* Reminder builder */
+  .rem-builder { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 22px; display: flex; flex-direction: column; gap: 14px; max-width: 620px; }
+  .rem-builder > input#remTitle { width: 100%; }
+  .rem-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .rem-line label { color: var(--muted); font-size: .85rem; min-width: 54px; }
+  .rem-opt { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .rem-opt.col { flex-direction: column; align-items: stretch; }
+  .rem-opt > label { color: var(--muted); font-size: .82rem; }
+  .rem-sfx { color: var(--muted); font-size: .9rem; }
+  .dow { display: flex; gap: 6px; flex-wrap: wrap; }
+  .dow button { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--muted); font: inherit; font-size: .85rem; cursor: pointer; transition: .15s; }
+  .dow button.on { background: linear-gradient(120deg, var(--accent), var(--accent2)); color: #0f1219; font-weight: 700; border-color: transparent; }
+  .times { display: flex; flex-wrap: wrap; gap: 8px; }
+  .times .time-chip { display: flex; align-items: center; gap: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 3px 6px 3px 10px; }
+  .times .time-chip input { border: none; background: transparent; padding: 4px 2px; }
+  .times .time-chip button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; padding: 0 4px; }
+  .times .time-chip button:hover { color: var(--red); }
+
   @media (max-width: 720px) {
     .app { flex-direction: column; }
     .sidebar { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; align-items: center; }

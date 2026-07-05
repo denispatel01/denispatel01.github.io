@@ -13,7 +13,7 @@ const OWNER_EMAIL = "denispatel01@gmail.com";
 // Sheet tabs used as tables
 const SHEETS = {
   todos: ["id", "title", "done", "priority", "created"],
-  reminders: ["id", "title", "remindAt", "repeat", "notified", "created"],
+  reminders: ["id", "title", "remindAt", "schedule", "notified", "created"],
   vault: ["id", "label", "value", "category", "created"],
   notes: ["id", "title", "body", "updated"],
 };
@@ -147,11 +147,86 @@ function deleteTodo(id) {
 /* ------------------------------------------------------------------ */
 function getReminders() { return readAll("reminders"); }
 
-// repeat is one of: "none" | "hourly" | "daily" | "weekly" | "monthly"
-function addReminder(title, remindAtISO, repeat) {
+/* ------------------------------------------------------------------ *
+ * Schedule model (stored as JSON in the "schedule" column):
+ *   { kind: "once",    at: "<ISO>" }
+ *   { kind: "hourly",  everyHours: N }
+ *   { kind: "weekly",  weekdays: [0..6], times: ["HH:MM", ...] }   // 0 = Sun
+ *   { kind: "monthly", monthdays: [1..31], times: ["HH:MM", ...] }
+ *   { kind: "custom",  weekdays: [...], monthdays: [...], times: [...] }
+ * Backward compatible with the old plain-string "repeat" values.
+ * ------------------------------------------------------------------ */
+function parseSchedule(raw) {
+  if (raw && typeof raw === "object") return raw;
+  try { const o = JSON.parse(raw); if (o && o.kind) return o; } catch (e) {}
+  switch (String(raw)) {
+    case "hourly":  return { kind: "hourly", everyHours: 1 };
+    case "daily":   return { kind: "custom", weekdays: [0,1,2,3,4,5,6], times: ["09:00"] };
+    case "weekly":  return { kind: "weekly", weekdays: [1], times: ["09:00"] };
+    case "monthly": return { kind: "monthly", monthdays: [1], times: ["09:00"] };
+    default:        return { kind: "once" };
+  }
+}
+
+function parseTime(hhmm) {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm || "");
+  return m ? { h: +m[1], m: +m[2] } : { h: 9, m: 0 };
+}
+
+/** Earliest fire time strictly after `after`, per schedule. null if none. */
+function computeNextFire(schedule, after) {
+  const s = schedule || {};
+  if (s.kind === "once") return null;
+  if (s.kind === "hourly") {
+    const n = Math.max(1, s.everyHours || 1);
+    let next = new Date(after.getTime() + n * 3600 * 1000);
+    const now = new Date();
+    while (next <= now) next = new Date(next.getTime() + n * 3600 * 1000); // catch up, no burst
+    return next;
+  }
+  const times = (s.times && s.times.length ? s.times : ["09:00"]).map(parseTime)
+    .sort(function (a, b) { return (a.h * 60 + a.m) - (b.h * 60 + b.m); });
+  const wds = s.weekdays || [], mds = s.monthdays || [];
+  function dayOk(d) {
+    if (s.kind === "weekly") return wds.indexOf(d.getDay()) >= 0;
+    if (s.kind === "monthly") return mds.indexOf(d.getDate()) >= 0;
+    const wOk = wds.length ? wds.indexOf(d.getDay()) >= 0 : true;   // custom: empty = any
+    const mOk = mds.length ? mds.indexOf(d.getDate()) >= 0 : true;
+    return wOk && mOk;
+  }
+  for (let i = 0; i < 800; i++) {
+    const day = new Date(after.getFullYear(), after.getMonth(), after.getDate() + i);
+    if (!dayOk(day)) continue;
+    for (let j = 0; j < times.length; j++) {
+      const slot = new Date(day.getFullYear(), day.getMonth(), day.getDate(), times[j].h, times[j].m, 0, 0);
+      if (slot > after) return slot;
+    }
+  }
+  return null;
+}
+
+/** Human-readable description of a schedule (for emails / UI). */
+function describeSchedule(s) {
+  if (!s || s.kind === "once") return "one-time";
+  if (s.kind === "hourly") return "every " + (s.everyHours || 1) + " hour(s)";
+  const DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const times = (s.times && s.times.length ? s.times : ["09:00"]).join(", ");
+  const wd = (s.weekdays || []).map(function (d) { return DOW[d]; }).join("/");
+  const md = (s.monthdays || []).join("/");
+  if (s.kind === "weekly")  return "weekly on " + wd + " at " + times;
+  if (s.kind === "monthly") return "monthly on day " + md + " at " + times;
+  return "custom" + (wd ? " " + wd : "") + (md ? " day " + md : "") + " at " + times;
+}
+
+/** scheduleJson: a JSON string of the schedule model above. */
+function addReminder(title, scheduleJson) {
   assertOwner();
+  const schedule = parseSchedule(scheduleJson);
+  const now = new Date();
+  let first = schedule.kind === "once" ? new Date(schedule.at) : computeNextFire(schedule, now);
+  if (!first || isNaN(first)) first = now;
   const id = newId();
-  sheet("reminders").appendRow([id, title, remindAtISO, repeat || "none", false, new Date()]);
+  sheet("reminders").appendRow([id, title, first.toISOString(), JSON.stringify(schedule), false, now]);
   return getReminders();
 }
 
@@ -163,37 +238,15 @@ function deleteReminder(id) {
   return getReminders();
 }
 
-/** Advance a date to the next occurrence for a repeating reminder. */
-function nextOccurrence(date, repeat) {
-  const d = new Date(date);
-  switch (repeat) {
-    case "hourly":  d.setHours(d.getHours() + 1); break;
-    case "daily":   d.setDate(d.getDate() + 1); break;
-    case "weekly":  d.setDate(d.getDate() + 7); break;
-    case "monthly": d.setMonth(d.getMonth() + 1); break;
-    default: return null; // "none" -> no next occurrence
-  }
-  // If we're catching up after downtime, keep advancing until it's in the future.
-  const now = new Date();
-  while (d <= now) {
-    if (repeat === "hourly") d.setHours(d.getHours() + 1);
-    else if (repeat === "daily") d.setDate(d.getDate() + 1);
-    else if (repeat === "weekly") d.setDate(d.getDate() + 7);
-    else if (repeat === "monthly") d.setMonth(d.getMonth() + 1);
-    else break;
-  }
-  return d;
-}
-
 /**
  * Run by a time-driven trigger (see setupTrigger). Emails you any reminder
- * that is due. One-time reminders are marked notified; recurring ones
- * (hourly/daily/weekly/monthly) are rescheduled to their next occurrence.
+ * that is due. One-time reminders are marked done; recurring ones are
+ * rescheduled to their next occurrence based on the schedule.
  */
 function checkReminders() {
   const sh = sheet("reminders");
   const values = sh.getDataRange().getValues();
-  const cols = SHEETS.reminders; // id,title,remindAt,repeat,notified,created
+  const cols = SHEETS.reminders; // id,title,remindAt,schedule,notified,created
   const cRemindAt = cols.indexOf("remindAt") + 1;
   const cNotified = cols.indexOf("notified") + 1;
   const now = new Date();
@@ -201,27 +254,22 @@ function checkReminders() {
     const id = values[i][cols.indexOf("id")];
     const title = values[i][cols.indexOf("title")];
     const remindAt = values[i][cols.indexOf("remindAt")];
-    const repeat = values[i][cols.indexOf("repeat")] || "none";
+    const scheduleRaw = values[i][cols.indexOf("schedule")];
     const notified = values[i][cols.indexOf("notified")];
     if (!id || notified) continue;
     const when = new Date(remindAt);
     if (when <= now) {
-      const repeatLabel = repeat === "none" ? "one-time" : "repeats " + repeat;
+      const schedule = parseSchedule(scheduleRaw);
       MailApp.sendEmail({
         to: OWNER_EMAIL,
         subject: "⏰ Reminder: " + title,
         body: "This is your reminder:\n\n" + title +
               "\n\nScheduled for: " + when.toLocaleString() +
-              "\n(" + repeatLabel + ")",
+              "\n(" + describeSchedule(schedule) + ")",
       });
-      const next = nextOccurrence(when, repeat);
-      if (next) {
-        // Recurring: move to next occurrence, stay active.
-        sh.getRange(i + 1, cRemindAt).setValue(next.toISOString());
-      } else {
-        // One-time: mark done.
-        sh.getRange(i + 1, cNotified).setValue(true);
-      }
+      const next = computeNextFire(schedule, now); // from now → future, no backlog burst
+      if (next) sh.getRange(i + 1, cRemindAt).setValue(next.toISOString());
+      else sh.getRange(i + 1, cNotified).setValue(true);
     }
   }
 }
