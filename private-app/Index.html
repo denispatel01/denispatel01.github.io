@@ -48,10 +48,17 @@
       <!-- REMINDERS -->
       <section class="view" id="view-reminders">
         <h1>Reminders</h1>
-        <p class="hint">You'll get an email when a reminder is due (requires the trigger — see README).</p>
+        <p class="hint">You'll get an email when a reminder is due. Set it to repeat hourly, daily, weekly, or monthly (requires the trigger — see README).</p>
         <div class="row">
           <input id="remTitle" placeholder="Remind me to…" />
           <input id="remWhen" type="datetime-local" />
+          <select id="remRepeat">
+            <option value="none">One-time</option>
+            <option value="hourly">Every hour</option>
+            <option value="daily">Every day</option>
+            <option value="weekly">Every week</option>
+            <option value="monthly">Every month</option>
+          </select>
           <button class="btn" onclick="ui.addReminder()">Add</button>
         </div>
         <ul class="list" id="reminderList"></ul>

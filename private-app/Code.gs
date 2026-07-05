@@ -13,7 +13,7 @@ const OWNER_EMAIL = "denispatel01@gmail.com";
 // Sheet tabs used as tables
 const SHEETS = {
   todos: ["id", "title", "done", "priority", "created"],
-  reminders: ["id", "title", "remindAt", "notified", "created"],
+  reminders: ["id", "title", "remindAt", "repeat", "notified", "created"],
   vault: ["id", "label", "value", "category", "created"],
   notes: ["id", "title", "body", "updated"],
 };
@@ -147,10 +147,11 @@ function deleteTodo(id) {
 /* ------------------------------------------------------------------ */
 function getReminders() { return readAll("reminders"); }
 
-function addReminder(title, remindAtISO) {
+// repeat is one of: "none" | "hourly" | "daily" | "weekly" | "monthly"
+function addReminder(title, remindAtISO, repeat) {
   assertOwner();
   const id = newId();
-  sheet("reminders").appendRow([id, title, remindAtISO, false, new Date()]);
+  sheet("reminders").appendRow([id, title, remindAtISO, repeat || "none", false, new Date()]);
   return getReminders();
 }
 
@@ -162,26 +163,65 @@ function deleteReminder(id) {
   return getReminders();
 }
 
+/** Advance a date to the next occurrence for a repeating reminder. */
+function nextOccurrence(date, repeat) {
+  const d = new Date(date);
+  switch (repeat) {
+    case "hourly":  d.setHours(d.getHours() + 1); break;
+    case "daily":   d.setDate(d.getDate() + 1); break;
+    case "weekly":  d.setDate(d.getDate() + 7); break;
+    case "monthly": d.setMonth(d.getMonth() + 1); break;
+    default: return null; // "none" -> no next occurrence
+  }
+  // If we're catching up after downtime, keep advancing until it's in the future.
+  const now = new Date();
+  while (d <= now) {
+    if (repeat === "hourly") d.setHours(d.getHours() + 1);
+    else if (repeat === "daily") d.setDate(d.getDate() + 1);
+    else if (repeat === "weekly") d.setDate(d.getDate() + 7);
+    else if (repeat === "monthly") d.setMonth(d.getMonth() + 1);
+    else break;
+  }
+  return d;
+}
+
 /**
- * Run by a time-driven trigger (see setupTrigger). Emails you any
- * reminder whose time has passed and that hasn't been notified yet.
+ * Run by a time-driven trigger (see setupTrigger). Emails you any reminder
+ * that is due. One-time reminders are marked notified; recurring ones
+ * (hourly/daily/weekly/monthly) are rescheduled to their next occurrence.
  */
 function checkReminders() {
   const sh = sheet("reminders");
   const values = sh.getDataRange().getValues();
+  const cols = SHEETS.reminders; // id,title,remindAt,repeat,notified,created
+  const cRemindAt = cols.indexOf("remindAt") + 1;
+  const cNotified = cols.indexOf("notified") + 1;
   const now = new Date();
   for (let i = 1; i < values.length; i++) {
-    const [id, title, remindAt, notified] = values[i];
+    const id = values[i][cols.indexOf("id")];
+    const title = values[i][cols.indexOf("title")];
+    const remindAt = values[i][cols.indexOf("remindAt")];
+    const repeat = values[i][cols.indexOf("repeat")] || "none";
+    const notified = values[i][cols.indexOf("notified")];
     if (!id || notified) continue;
     const when = new Date(remindAt);
     if (when <= now) {
+      const repeatLabel = repeat === "none" ? "one-time" : "repeats " + repeat;
       MailApp.sendEmail({
         to: OWNER_EMAIL,
         subject: "⏰ Reminder: " + title,
         body: "This is your reminder:\n\n" + title +
-              "\n\nScheduled for: " + when.toLocaleString(),
+              "\n\nScheduled for: " + when.toLocaleString() +
+              "\n(" + repeatLabel + ")",
       });
-      sh.getRange(i + 1, 4).setValue(true); // mark notified
+      const next = nextOccurrence(when, repeat);
+      if (next) {
+        // Recurring: move to next occurrence, stay active.
+        sh.getRange(i + 1, cRemindAt).setValue(next.toISOString());
+      } else {
+        // One-time: mark done.
+        sh.getRange(i + 1, cNotified).setValue(true);
+      }
     }
   }
 }

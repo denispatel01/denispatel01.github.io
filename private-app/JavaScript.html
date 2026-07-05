@@ -78,9 +78,10 @@ const ui = {
   addReminder: function () {
     const t = $("#remTitle").value.trim();
     const w = $("#remWhen").value;
+    const rep = $("#remRepeat").value;
     if (!t || !w) { toast("Enter a title and time"); return; }
-    call("addReminder", [t, new Date(w).toISOString()], renderReminders);
-    $("#remTitle").value = ""; $("#remWhen").value = "";
+    call("addReminder", [t, new Date(w).toISOString(), rep], renderReminders);
+    $("#remTitle").value = ""; $("#remWhen").value = ""; $("#remRepeat").value = "none";
   },
   delReminder: function (id) { call("deleteReminder", [id], renderReminders); },
 
@@ -127,10 +128,13 @@ function renderTodos(list) {
 
 function renderReminders(list) {
   list.sort(function (a, b) { return new Date(a.remindAt) - new Date(b.remindAt); });
+  var REPEAT = { none: "one-time", hourly: "🔁 hourly", daily: "🔁 daily", weekly: "🔁 weekly", monthly: "🔁 monthly" };
   $("#reminderList").innerHTML = list.length ? list.map(function (r) {
+    var rep = REPEAT[r.repeat] || "one-time";
+    var state = r.notified ? "✅ done · " : (r.repeat && r.repeat !== "none" ? "🔁 next: " : "⏳ upcoming · ");
     return '<li class="item">' +
       '<div class="txt">' + esc(r.title) +
-      '<div class="sub">' + (r.notified ? "✅ sent · " : "⏳ upcoming · ") + fmtDate(r.remindAt) + '</div></div>' +
+      '<div class="sub">' + state + fmtDate(r.remindAt) + ' · ' + rep + '</div></div>' +
       '<button class="del" onclick="ui.delReminder(\'' + r.id + '\')">✕</button></li>';
   }).join("") : '<p class="hint">No reminders set.</p>';
 }

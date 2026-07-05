@@ -42,10 +42,16 @@ Use the **exact** Google account you'll sign in with. Save (Ctrl+S).
 4. **Deploy** → authorize when prompted (choose your account → *Advanced* → *Go to project (unsafe)* → *Allow*). This "unsafe" warning is normal for your own scripts.
 5. Copy the **Web app URL** — that's your private dashboard. Bookmark it.
 
-### 5. Turn on reminder emails (optional but recommended)
+### 5. Turn on reminder emails (recommended)
 1. In the editor, open the function dropdown (top toolbar), pick **`setupTrigger`**.
 2. Click **Run**. Authorize if asked.
-3. Done — every 5 minutes the app emails you any reminder that's due.
+3. Done — every 5 minutes the app checks for due reminders and emails you.
+
+**Recurring reminders:** when adding a reminder you can choose a repeat —
+**One-time, Every hour, Every day, Every week, or Every month**. One-time reminders
+fire once and are marked done; recurring ones automatically reschedule to their next
+occurrence after each email, so they keep going forever until you delete them.
+(The 5-minute trigger means an email arrives within ~5 minutes of the due time.)
 
 ---
 
